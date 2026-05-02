@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DIIVOO2MQTT Gateway Flasher</title>
+  <meta name="description" content="Flash the DIIVOO2MQTT ESP32 gateway firmware from your browser." />
+  <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png?v=20260418" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon/favicon.svg?v=20260418" />
+  <link rel="shortcut icon" href="/assets/favicon/favicon.ico?v=20260418" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png?v=20260418" />
+  <meta name="apple-mobile-web-app-title" content="Diivoo2MQTT" />
+  <link rel="manifest" href="/assets/favicon/site.webmanifest?v=20260418" />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f2ec;
+      --panel: #ffffff;
+      --panel-soft: #faf9f5;
+      --border: #d9d4c8;
+      --text: #22221f;
+      --muted: #67645c;
+      --accent: #245b45;
+      --warning: #8a5a00;
+      --danger: #9a2f28;
+      --code: #efede6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(1040px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .project {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 6px 0 0;
+      font-size: 2rem;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 66ch;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .repo-note {
+      min-width: max-content;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-align: right;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-top: 24px;
+    }
+
+    .flash-panel,
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .flash-panel {
+      padding: 22px;
+    }
+
+    .panel {
+      padding: 20px;
+    }
+
+    .flash-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 0.98rem;
+      line-height: 1.2;
+    }
+
+    .version-box {
+      margin-top: 16px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .install-row {
+      margin-top: 18px;
+    }
+
+    .warning {
+      margin-top: 18px;
+      padding: 14px;
+      border-left: 4px solid var(--warning);
+      background: #fff6df;
+      color: #3a2a10;
+      font-size: 0.94rem;
+    }
+
+    .reassurance {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .section-title {
+      margin-top: 22px;
+    }
+
+    .opening-guide {
+      display: grid;
+      grid-template-columns: minmax(160px, 220px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .guide-photo {
+      margin: 0;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+    }
+
+    .guide-photo img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .guide-photo figcaption {
+      padding: 9px 10px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .photo-grid .guide-photo img {
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .safety-note {
+      margin: 0 0 14px;
+      padding: 14px;
+      border-left: 4px solid var(--danger);
+      background: #fff0ee;
+      color: #3b1714;
+      font-size: 0.94rem;
+    }
+
+    .led-demo {
+      display: grid;
+      gap: 14px;
+    }
+
+    .gateway-face {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+    }
+
+    .gateway-body {
+      position: relative;
+      flex: 0 0 auto;
+      width: 86px;
+      height: 122px;
+      border: 6px solid #536043;
+      border-radius: 18px;
+      background: #3d3d3a;
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+    }
+
+    .gateway-body::before {
+      position: absolute;
+      inset: 9px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, #4b4b47, #30302d);
+      content: "";
+    }
+
+    .gateway-panel {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      width: 31px;
+      height: 78px;
+      border-radius: 19px;
+      background: linear-gradient(180deg, #4d504a, #323331);
+      box-shadow: 0 7px 16px rgba(0, 0, 0, 0.32);
+      transform: translateX(-50%);
+    }
+
+    .gateway-button {
+      position: absolute;
+      top: 8px;
+      left: 5px;
+      width: 21px;
+      height: 21px;
+      border: 2px solid #151713;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #9aa18f, #5f6658 64%, #343832);
+    }
+
+    .led {
+      position: absolute;
+      bottom: 13px;
+      left: 11px;
+      width: 9px;
+      height: 17px;
+      border-radius: 999px;
+      background: #123456;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .led.is-fast {
+      animation: led-fast 200ms steps(1, end) infinite;
+    }
+
+    .led.is-slow {
+      animation: led-slow 1000ms steps(1, end) infinite;
+    }
+
+    .led.is-off {
+      opacity: 0.25;
+    }
+
+    .led-caption {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .led-caption strong {
+      display: block;
+      color: var(--text);
+    }
+
+    .led-states {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .led-states li {
+      display: grid;
+      grid-template-columns: 118px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .led-states li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .state-name {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .state-led {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #123456;
+      vertical-align: middle;
+    }
+
+    .state-led.is-fast {
+      animation: led-fast 200ms steps(1, end) infinite;
+    }
+
+    .state-led.is-slow {
+      animation: led-slow 1000ms steps(1, end) infinite;
+    }
+
+    .state-led.is-off {
+      opacity: 0.25;
+    }
+
+    @keyframes led-fast {
+      0%,
+      49% {
+        background: #18a8ff;
+        box-shadow: 0 0 14px rgba(24, 168, 255, 0.95), 0 0 2px #ffffff;
+        opacity: 1;
+      }
+
+      50%,
+      100% {
+        background: #123456;
+        box-shadow: none;
+        opacity: 0.28;
+      }
+    }
+
+    @keyframes led-slow {
+      0%,
+      49% {
+        background: #18a8ff;
+        box-shadow: 0 0 14px rgba(24, 168, 255, 0.95), 0 0 2px #ffffff;
+        opacity: 1;
+      }
+
+      50%,
+      100% {
+        background: #123456;
+        box-shadow: none;
+        opacity: 0.28;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .led.is-fast,
+      .led.is-slow,
+      .state-led.is-fast,
+      .state-led.is-slow {
+        animation: none;
+        background: #18a8ff;
+        box-shadow: 0 0 10px rgba(24, 168, 255, 0.6);
+        opacity: 1;
+      }
+    }
+
+    .checklist {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      display: grid;
+      grid-template-columns: 1.6rem 1fr;
+      gap: 8px;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .checklist li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .step-no {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .info-list {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .info-list li+li {
+      margin-top: 7px;
+    }
+
+    .wiring {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+    }
+
+    .wiring th,
+    .wiring td {
+      padding: 9px 8px;
+      border-top: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .wiring th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    code {
+      padding: 0.1rem 0.3rem;
+      background: var(--code);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9em;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .good {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .mini {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 820px) {
+      .topbar {
+        display: block;
+      }
+
+      .repo-note {
+        min-width: 0;
+        margin-top: 14px;
+        text-align: left;
+      }
+
+      .flash-header {
+        display: block;
+      }
+
+      .opening-guide {
+        grid-template-columns: 1fr;
+      }
+
+      .photo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</head>
+
+<body>
+  <main class="wrap">
+    <header class="topbar">
+      <div>
+        <p class="project">DIIVOO2MQTT gateway flasher</p>
+        <h1>Install the ESP32 gateway firmware</h1>
+        <p class="lead">
+          Use this page to flash the custom DIIVOO2MQTT firmware onto the original DIIVOO gateway.
+          The first flash requires opening the gateway and connecting a 3.3 V USB-to-serial adapter.
+        </p>
+      </div>
+      <div class="repo-note">
+        Unofficial project<br>
+        Not affiliated with DIIVOO
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="panel">
+        <h2>1. Open the gateway</h2>
+        <div class="opening-guide section-title">
+          <figure class="guide-photo">
+            <img src="assets/security-screw.png" alt="Close-up of the one-way clutch-head security screw used in the DIIVOO gateway enclosure.">
+            <figcaption>One-way clutch-head security screw from the gateway case.</figcaption>
+          </figure>
+          <ul class="info-list">
+            <li>The case uses one-way clutch-head security screws. They look like slotted screws, but the opening side is ramped.</li>
+            <li>A matching security bit may not reach the screw because the screw sits deep inside a narrow plastic recess.</li>
+            <li>Use the widest flat-head screwdriver that fits into the recess without being too thick.</li>
+            <li>Press down hard and turn slowly. If the screwdriver rides up, stop and reposition it before the head gets damaged.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>2. Connect the serial adapter</h2>
+        <p class="safety-note">
+          <strong>Do not plug the opened gateway into a wall outlet.</strong>
+          During flashing, power the ESP32 only through the 3.3 V USB-to-serial adapter.
+          Never connect mains power while the case is open or while the serial adapter is attached.
+        </p>
+        <p class="safety-note">
+          <strong>Keep the USB-to-serial adapter unplugged while wiring.</strong>
+          Set the flash-mode bridge first, then plug in the adapter. If the ESP32 receives power
+          before the bridge is in place, it will boot normally instead of entering flash mode.
+        </p>
+        <h3>Serial wiring</h3>
+        <table class="wiring">
+          <thead>
+            <tr>
+              <th>Adapter</th>
+              <th>Gateway ESP32</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>3.3V</code></td>
+              <td><code>3.3V</code></td>
+            </tr>
+            <tr>
+              <td><code>GND</code></td>
+              <td><code>GND</code></td>
+            </tr>
+            <tr>
+              <td><code>TX</code></td>
+              <td><code>RX</code></td>
+            </tr>
+            <tr>
+              <td><code>RX</code></td>
+              <td><code>TX</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3 class="section-title">Flash mode bridge</h3>
+        <p class="muted">
+          The boot/flash connection is not another USB-to-serial wire. To enter flashing mode,
+          bridge the two marked flash-mode contacts on the gateway PCB before the ESP32 receives
+          power. Then plug in the USB-to-serial adapter. Once flashing has started, the bridge can
+          stay in place; removing it is optional.
+        </p>
+        <div class="photo-grid">
+          <figure class="guide-photo">
+            <img src="assets/gateway-pinout-overview.jpg" alt="Opened DIIVOO gateway PCB with test clips connected to the ESP32 serial header.">
+            <figcaption>Serial header on the opened gateway PCB.</figcaption>
+          </figure>
+          <figure class="guide-photo">
+            <img src="assets/gateway-pinout-closeup.svg" alt="Annotated DIIVOO gateway pinout showing 3V3, TXD, RXD, GND, and the flash boot bridge contact.">
+            <figcaption>Pinout: 3V3, TXD, RXD, GND and boot contact.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="panel">
+        <h2>3. Check before flashing</h2>
+        <ul class="info-list">
+          <li>Use a USB-to-serial adapter with real 3.3 V logic level.</li>
+          <li>Leave the gateway unplugged from mains power while it is opened.</li>
+          <li>Disconnect anything else that could use the serial port.</li>
+          <li>Use short, stable jumper wires.</li>
+          <li>The initial flash replaces the original gateway firmware.</li>
+        </ul>
+        <div class="photo-grid">
+          <figure class="guide-photo">
+            <img src="assets/gateway-board-open.jpg" alt="Opened DIIVOO gateway PCB showing the mains input side and internal power supply components.">
+            <figcaption>Opened gateway PCB. Keep it disconnected from mains while working on it.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="flash-panel">
+        <div class="flash-header">
+          <div>
+            <h2>4. Flash the firmware</h2>
+            <p class="muted">Chrome or Edge on desktop required.</p>
+          </div>
+        </div>
+
+        <div id="version-info" class="version-box">Loading firmware version...</div>
+
+        <div class="install-row">
+          <esp-web-install-button id="install-button"></esp-web-install-button>
+        </div>
+
+        <div class="warning">
+          <strong>3.3 V only.</strong> Do not connect 5 V serial logic to the ESP32 pins.
+          Keep the boot pin connected to GND while starting the flash process.
+        </div>
+
+        <p class="reassurance">
+          The gateway contains a regular ESP32. A failed flash usually does not brick it permanently;
+          in most cases you can put it back into boot mode and flash again. The real risk is incorrect
+          wiring or using 5 V logic on the serial pins.
+        </p>
+
+        <h3 class="section-title">Flash sequence</h3>
+        <ol class="checklist">
+          <li><span class="step-no">1</span><span>Leave the USB-to-serial adapter unplugged.</span></li>
+          <li><span class="step-no">2</span><span>Connect the serial wires and set the flash-mode bridge on the PCB.</span></li>
+          <li><span class="step-no">3</span><span>Plug in the USB-to-serial adapter while the bridge is still in place.</span></li>
+          <li><span class="step-no">4</span><span>Click <strong>Connect</strong>, select the serial port, and start flashing.</span></li>
+          <li><span class="step-no">5</span><span>Once flashing has started, you may remove the bridge, but you do not have to.</span></li>
+          <li><span class="step-no">6</span><span>Wait until flashing has finished, then reboot the gateway.</span></li>
+        </ol>
+      </article>
+
+      <article class="panel led-demo">
+        <h2>5. Read the blue LED</h2>
+        <div class="gateway-face">
+          <div class="gateway-body" aria-hidden="true">
+            <div class="gateway-panel">
+              <span class="gateway-button"></span>
+              <span class="led is-slow"></span>
+            </div>
+          </div>
+          <p class="led-caption">
+            <strong>While connecting to WiFi</strong>
+            The gateway LED blinks slowly until it joins your network.
+          </p>
+        </div>
+        <ul class="led-states">
+          <li>
+            <span class="state-name"><span class="state-led is-fast"></span>Fast blink</span>
+            <span>Setup or pairing portal active, no stored WiFi, or connection failed.</span>
+          </li>
+          <li>
+            <span class="state-name"><span class="state-led is-slow"></span>Slow blink</span>
+            <span>Booting and trying to connect to WiFi.</span>
+          </li>
+          <li>
+            <span class="state-name"><span class="state-led is-off"></span>Off</span>
+            <span>Connected and ready for DIIVOO2MQTT.</span>
+          </li>
+        </ul>
+      </article>
+
+      <article class="panel">
+        <h2>6. Continue in Home Assistant</h2>
+        <ul class="info-list">
+          <li>Disconnect the serial adapter and power the gateway normally.</li>
+          <li>Configure WiFi through the gateway setup portal if needed.</li>
+          <li>Install the DIIVOO2MQTT add-on in Home Assistant.</li>
+          <li>The add-on discovers flashed gateways through mDNS.</li>
+        </ul>
+      </article>
+    </section>
+
+    <p class="footer">
+      Flashing is at your own risk. Keep a copy of any data you need before replacing the original firmware.
+    </p>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const versionInfo = document.getElementById("version-info");
+      const installButton = document.getElementById("install-button");
+
+      try {
+        // Load firmware metadata from the local firmware directory.
+        const response = await fetch("../firmware/versions.json");
+        if (!response.ok) throw new Error("Could not load versions.json");
+
+        const versions = await response.json();
+
+        const gatewayData = versions["tcp_gateway_WG03"];
+        if (!gatewayData || (!gatewayData.installBinUrl && !gatewayData.binUrl)) {
+          throw new Error("Invalid versions.json structure");
+        }
+
+        const version = gatewayData.version;
+        const downloadUrl = gatewayData.installBinUrl || gatewayData.binUrl;
+
+        // Use the local firmware file so the flasher works from the same static host.
+        const filename = downloadUrl.split('/').pop();
+        const localPath = `../firmware/${filename}`;
+
+        versionInfo.innerHTML = `<span class="good">Latest firmware:</span> ${version}<br><span class="mini">File: ${filename}</span>`;
+
+        const manifest = {
+          name: "DIIVOO Gateway",
+          version: version,
+          new_install_prompt_erase: true,
+          builds: [
+            {
+              chipFamily: "ESP32",
+              parts: [
+                { path: localPath, offset: 0 }
+              ]
+            }
+          ]
+        };
+
+        const manifestString = JSON.stringify(manifest);
+        const manifestBlob = new Blob([manifestString], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+
+        installButton.setAttribute("manifest", manifestUrl);
+
+      } catch (err) {
+        console.error(err);
+        versionInfo.innerHTML = `<span class="danger">Could not load firmware version:</span> ${err.message}`;
+      }
+    });
+  </script>
+</body>
+
+</html>

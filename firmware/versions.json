@@ -1,0 +1,7 @@
+{
+  "tcp_gateway_WG03": {
+    "version": "0.1.10",
+    "binUrl": "https://raw.githubusercontent.com/Technerd-SG/hassio-diivoo2mqtt/main/firmware/tcp_gateway_WG03_0.1.10.bin",
+    "installBinUrl": "https://raw.githubusercontent.com/Technerd-SG/hassio-diivoo2mqtt/main/firmware/tcp_gateway_WG03_0.1.10_merged.bin"
+  }
+}

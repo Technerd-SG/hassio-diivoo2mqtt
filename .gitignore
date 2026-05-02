@@ -1,0 +1,35 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs and local runtime data
+logs/
+*.log
+*log.txt
+diivoo2mqtt/backend/data/
+diivoo2mqtt/backend/uploads/
+diivoo2mqtt/backend/tmp/
+
+# Node dependencies and build output
+node_modules/
+**/node_modules/
+diivoo2mqtt/frontend/dist/
+diivoo2mqtt/frontend/.vite/
+diivoo2mqtt/backend/public/
+coverage/
+.nyc_output/
+
+# Local configuration / secrets
+.env
+.env.*
+!.env.example
+
+# Archives
+*.tar
+*.tar.gz
+*.zip

@@ -1,0 +1,15 @@
+{
+  "name": "diivoo-addon-backend",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mqtt": "^5.15.1",
+    "multicast-dns": "^7.2.5",
+    "socket.io": "^4.8.3"
+  }
+}
