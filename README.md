@@ -37,7 +37,7 @@ This isn't a stripped-down hack. It replicates the full feature set of the origi
 
 ## What you need
 
-1. **A DIIVOO ESP32 gateway** – the physical box that came with your timers. You'll flash it with custom firmware once using the [browser-based web flasher](https://technerd-sg.github.io/hassio-diivoo2mqtt/webflasher/)
+1. **A DIIVOO ESP32 gateway (WG03)** – the physical box that came with your timers. You'll flash it with custom firmware once using the [browser-based web flasher](https://technerd-sg.github.io/hassio-diivoo2mqtt/webflasher/)
 2. **An MQTT broker** – the Mosquitto add-on in Home Assistant works perfectly
 
 ## Setup
