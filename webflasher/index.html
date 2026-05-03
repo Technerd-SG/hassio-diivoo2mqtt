@@ -718,8 +718,11 @@
         const downloadUrl = gatewayData.installBinUrl || gatewayData.binUrl;
 
         // Use the local firmware file so the flasher works from the same static host.
+        // The manifest itself is served as a blob URL, so firmware parts must use
+        // absolute URLs. Relative paths cannot be resolved against a blob URL.
         const filename = downloadUrl.split('/').pop();
         const localPath = `../firmware/${filename}`;
+        const firmwareUrl = new URL(localPath, window.location.href).href;
 
         versionInfo.innerHTML = `<span class="good">Latest firmware:</span> ${version}<br><span class="mini">File: ${filename}</span>`;
 
@@ -731,7 +734,7 @@
             {
               chipFamily: "ESP32",
               parts: [
-                { path: localPath, offset: 0 }
+                { path: firmwareUrl, offset: 0 }
               ]
             }
           ]
