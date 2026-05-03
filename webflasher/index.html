@@ -626,7 +626,7 @@
         <div id="version-info" class="version-box">Loading firmware version...</div>
 
         <div class="install-row">
-          <esp-web-install-button id="install-button"></esp-web-install-button>
+          <esp-web-install-button id="install-button" manifest="manifest.json"></esp-web-install-button>
         </div>
 
         <div class="warning">
@@ -700,8 +700,6 @@
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       const versionInfo = document.getElementById("version-info");
-      const installButton = document.getElementById("install-button");
-
       try {
         // Load firmware metadata from the local firmware directory.
         const response = await fetch("../firmware/versions.json");
@@ -717,34 +715,9 @@
         const version = gatewayData.version;
         const downloadUrl = gatewayData.installBinUrl || gatewayData.binUrl;
 
-        // Use the local firmware file so the flasher works from the same static host.
-        // The manifest itself is served as a blob URL, so firmware parts must use
-        // absolute URLs. Relative paths cannot be resolved against a blob URL.
         const filename = downloadUrl.split('/').pop();
-        const localPath = `../firmware/${filename}`;
-        const firmwareUrl = new URL(localPath, window.location.href).href;
 
         versionInfo.innerHTML = `<span class="good">Latest firmware:</span> ${version}<br><span class="mini">File: ${filename}</span>`;
-
-        const manifest = {
-          name: "DIIVOO Gateway",
-          version: version,
-          new_install_prompt_erase: true,
-          builds: [
-            {
-              chipFamily: "ESP32",
-              parts: [
-                { path: firmwareUrl, offset: 0 }
-              ]
-            }
-          ]
-        };
-
-        const manifestString = JSON.stringify(manifest);
-        const manifestBlob = new Blob([manifestString], { type: 'application/json' });
-        const manifestUrl = URL.createObjectURL(manifestBlob);
-
-        installButton.setAttribute("manifest", manifestUrl);
 
       } catch (err) {
         console.error(err);

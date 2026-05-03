@@ -1,0 +1,17 @@
+{
+  "name": "DIIVOO Gateway",
+  "version": "0.1.10",
+  "new_install_prompt_erase": true,
+  "new_install_improv_wait_time": 0,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "../firmware/tcp_gateway_WG03_0.1.10_merged.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
