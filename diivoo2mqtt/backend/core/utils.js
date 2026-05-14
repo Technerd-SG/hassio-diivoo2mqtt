@@ -187,6 +187,9 @@ function parseJoinPacket(payload) {
   } else if (hardwareId === 0x0D1F) {
       model = 'WT-07W';
       channelCount = 1;
+  } else if (hardwareId === 0x0E20) {
+      model = 'WT-09W';
+      channelCount = 2;
   } else if (hardwareId === 0x0F25) {
       model = 'WT-11W(1)';
       channelCount = 3;
