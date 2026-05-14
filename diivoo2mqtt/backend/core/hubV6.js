@@ -264,6 +264,14 @@ class SmartHub extends EventEmitter {
         return Array.from(grouped.values());
     }
 
+    dismissDiagnosticLog(valveId) {
+        const key = String(valveId);
+        this.unknownDevicesLogs = this.unknownDevicesLogs.filter(l => String(l.valveId) !== key);
+        this._diagnosticLogsDirty = true;
+        this._flushDiagnosticLogsSync();
+        this.emit('diagnosticLogsUpdate');
+    }
+
     async _handleGatewayConnection(ev) {
         this.emit('gatewayStateUpdate');
         if (ev.connected) {

@@ -54,6 +54,12 @@ class WebServer {
             res.json({ summary: this.hub.getDiagnosticSummary() });
         });
 
+        this.app.delete('/api/diagnostic/unknown-devices/:valveId', (req, res) => {
+            const valveId = req.params.valveId.toString();
+            this.hub.dismissDiagnosticLog(valveId);
+            res.json({ ok: true });
+        });
+
         this.app.get('/api/diagnostic/download-join-log/:valveId', (req, res) => {
             const valveId = req.params.valveId.toString();
             const logs = this.hub.unknownDevicesLogs || [];
