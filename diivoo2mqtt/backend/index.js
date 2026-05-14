@@ -3,7 +3,7 @@ const SmartHub = require('./core/hubV6');
 const MqttBridge = require('./interfaces/mqttBridge');
 const WebServer = require('./interfaces/webServer');
 
-console.log("Starte Diivoo Custom Hub...");
+console.log("Starting Diivoo Custom Hub...");
 
 const myHubConfig = {
     id: 16926055,
@@ -37,15 +37,15 @@ let isShuttingDown = false;
 
 async function shutdown(signal) {
     if (isShuttingDown) {
-        console.log(`Signal ${signal} empfangen, Shutdown läuft bereits...`);
+        console.log(`Signal ${signal} received, shutdown already in progress...`);
         return;
     }
 
     isShuttingDown = true;
-    console.log(`Empfangenes Signal: ${signal}. Fahre System herunter...`);
+    console.log(`Signal ${signal} received. Shutting down...`);
 
     const forceExitTimer = setTimeout(() => {
-        console.error('Shutdown Timeout erreicht, beende Prozess hart.');
+        console.error('Shutdown timeout reached, forcing exit.');
         process.exit(1);
     }, 5000);
 
@@ -68,7 +68,7 @@ async function shutdown(signal) {
         process.exit(0);
     } catch (err) {
         clearTimeout(forceExitTimer);
-        console.error('Fehler beim Shutdown:', err);
+        console.error('Error during shutdown:', err);
         process.exit(1);
     }
 }

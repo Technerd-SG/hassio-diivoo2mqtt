@@ -29,7 +29,7 @@ class GatewayStore {
             const data = fs.readFileSync(this.filePath, 'utf8');
             return JSON.parse(data);
         } catch (err) {
-            console.error(`[GatewayStore] Fehler beim Laden der Gateways aus ${this.filePath}:`, err.message);
+            console.error(`[GatewayStore] Error loading gateways from ${this.filePath}:`, err.message);
             return [];
         }
     }
@@ -47,10 +47,10 @@ class GatewayStore {
                 });
 
             fs.writeFile(this.filePath, JSON.stringify(serialized, null, 2), 'utf8', (err) => {
-                if (err) console.error(`[GatewayStore] Fehler beim Speichern der Gateways nach ${this.filePath}:`, err.message);
+                if (err) console.error(`[GatewayStore] Error saving gateways to ${this.filePath}:`, err.message);
             });
         } catch (err) {
-            console.error(`[GatewayStore] Fehler beim Serialisieren der Gateways:`, err.message);
+            console.error(`[GatewayStore] Error serialising gateways:`, err.message);
         }
     }
 }

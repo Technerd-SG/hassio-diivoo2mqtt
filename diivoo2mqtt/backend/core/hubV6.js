@@ -134,7 +134,7 @@ class SmartHub extends EventEmitter {
 
             // Event-Listener anhängen
             device.on('stateUpdate', (updateData) => {
-                console.log(`\n🌍 [DIGITAL TWIN] Update von Ventil ${updateData.valveId} wegen ${updateData.reason}:`);
+                console.log(`\n🌍 [DIGITAL TWIN] Update for valve ${updateData.valveId} due to ${updateData.reason}:`);
                 console.log(JSON.stringify(updateData.state, null, 2));
                 this.emit('deviceUpdate', updateData);
                 this.deviceStore.save(this.devices);
@@ -143,7 +143,7 @@ class SmartHub extends EventEmitter {
             this.devices.set(data.valveId, device);
         }
         if (savedDevices.length > 0) {
-            console.log(`[SmartHub] ${savedDevices.length} gespeicherte Ventile wiederhergestellt.`);
+            console.log(`[SmartHub] ${savedDevices.length} saved valve(s) restored.`);
         }
     }
 
@@ -156,7 +156,7 @@ class SmartHub extends EventEmitter {
                 return JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
             }
         } catch (e) {
-            console.error("[SmartHub] Fehler beim Laden der Diagnose-Logs:", e.message);
+            console.error("[SmartHub] Error loading diagnostic logs:", e.message);
         }
         return [];
     }
@@ -267,7 +267,7 @@ class SmartHub extends EventEmitter {
     async _handleGatewayConnection(ev) {
         this.emit('gatewayStateUpdate');
         if (ev.connected) {
-            console.log(`[SmartHub] Gateway ${ev.gatewayId} verbunden. Führe initialen Watchdog-Check aus...`);
+            console.log(`[SmartHub] Gateway ${ev.gatewayId} connected. Running initial watchdog check...`);
             // Ruft den Watchdog direkt auf. Da lastSeen oft älter als 5h ist,
             // werden die Pings direkt hier getriggert!
             await this._checkDeviceWatchdog();
@@ -286,11 +286,11 @@ class SmartHub extends EventEmitter {
         }
 
         if (!anyConnected) {
-            console.log('[SmartHub] 🔴 Kein Gateway mehr online. Setze alle Ventile auf offline.');
+            console.log('[SmartHub] 🔴 No gateway online. Marking all valves as offline.');
             for (const device of this.devices.values()) {
                 if (device.isOnline) {
-                    device.lastSeen = 0; // erzwingt offline Status
-                    device._notifyStateChange('Alle Gateways offline');
+                    device.lastSeen = 0;
+                    device._notifyStateChange('All gateways offline');
                 }
             }
         }
@@ -307,24 +307,24 @@ class SmartHub extends EventEmitter {
             const timeSinceLastSeen = device.lastSeen ? (now - device.lastSeen) : Infinity;
 
             if (timeSinceLastSeen > pingTimeoutMs) {
-                console.log(`[SmartHub] Watchdog: Ping für Ventil ${device.valveId} erforderlich (letzter Kontakt: ${timeSinceLastSeen === Infinity ? 'nie' : Math.floor(timeSinceLastSeen / 1000 / 60) + ' min'}).`);
+                console.log(`[SmartHub] Watchdog: ping required for valve ${device.valveId} (last contact: ${timeSinceLastSeen === Infinity ? 'never' : Math.floor(timeSinceLastSeen / 1000 / 60) + ' min'}).`);
 
                 // Bevor wir pingen, setzen wir das Gerät optional auf offline, falls es sehr alt ist
                 if (timeSinceLastSeen > offlineThresholdMs) {
-                    device._notifyStateChange('Watchdog Offline Limit erreicht');
+                    device._notifyStateChange('Watchdog offline limit reached');
                 }
 
                 try {
                     await device.executeWakeUpPing(2, 1000);
                 } catch (err) {
-                    console.error(`[SmartHub] Fehler beim Watchdog Ping für Ventil ${device.valveId}:`, err.message);
+                    console.error(`[SmartHub] Watchdog ping error for valve ${device.valveId}:`, err.message);
                 }
             }
         }
     }
 
     async shutdown() {
-        console.log('[SmartHub] Shutdown...');
+        console.log('[SmartHub] Shutting down...');
         if (this.mdnsScanner) {
             this.mdnsScanner.stop();
         }
@@ -344,7 +344,7 @@ class SmartHub extends EventEmitter {
             this._addDynamicGateway(gwInfo);
         }
         if (savedGateways.length > 0) {
-            console.log(`[SmartHub] ${savedGateways.length} manuell gespeicherte Gateways wiederhergestellt.`);
+            console.log(`[SmartHub] ${savedGateways.length} manually saved gateway(s) restored.`);
         }
     }
 
@@ -368,7 +368,7 @@ class SmartHub extends EventEmitter {
 
         if (this.gateways.has(gwInfo.id)) return;
 
-        console.log(`[SmartHub] Füge mDNS Gateway dynamisch hinzu: ${gwInfo.id} (${gwInfo.ip}:${gwInfo.port})`);
+        console.log(`[SmartHub] Adding gateway dynamically: ${gwInfo.id} (${gwInfo.ip}:${gwInfo.port})`);
 
         const node = new GatewayNode({
             id: gwInfo.id,
@@ -392,7 +392,7 @@ class SmartHub extends EventEmitter {
 
         const node = this.gateways.get(gatewayId);
         if (node) {
-            console.log(`[SmartHub] Entferne manuelles Gateway: ${gatewayId}`);
+            console.log(`[SmartHub] Removing manual gateway: ${gatewayId}`);
 
             node.destroy();
 
@@ -407,14 +407,14 @@ class SmartHub extends EventEmitter {
     removeDevice(valveId) {
         const id = Number(valveId);
         if (this.devices.has(id)) {
-            console.log(`[SmartHub] Entferne Gerät ${id}`);
+            console.log(`[SmartHub] Removing device ${id}`);
 
             // Optional cleanup if necessary
             // this.devices.get(id).destroy();
 
             this.devices.delete(id);
             this.deviceStore.save(this.devices);
-            console.log(`[SmartHub] Gerät ${id} wurde entfernt und Speicherung aktualisiert.`);
+            console.log(`[SmartHub] Device ${id} removed and store updated.`);
         }
     }
 
@@ -431,7 +431,7 @@ class SmartHub extends EventEmitter {
             allGateways.find(gw => gw.isConnected);
 
         if (!selectedGw) {
-            throw new Error('Routing fehlgeschlagen: Kein Gateway ist aktuell online!');
+            throw new Error('Routing failed: no gateway is currently online!');
         }
 
         const txProfile = options.txProfile || 'short';
@@ -529,7 +529,7 @@ class SmartHub extends EventEmitter {
 
                 if (!this.pairingMode) return;
 
-                console.log(`\n[+] NEUES GERÄT ERKANNT: ID ${senderId}`);
+                console.log(`\n[+] NEW DEVICE DETECTED: ID ${senderId}`);
 
                 device = new ValveDevice(senderId, this.config.id, this.gatewayApi, {
                     isBound: false,
@@ -540,7 +540,7 @@ class SmartHub extends EventEmitter {
                 // NEU: Hänge den Event-Listener an den Zwilling!
                 device.on('stateUpdate', (updateData) => {
                     // Hier kannst du das JSON weiterverteilen (WebSockets, MQTT, etc.)
-                    console.log(`\n🌍 [DIGITAL TWIN] Update von Ventil ${updateData.valveId} wegen ${updateData.reason}:`);
+                    console.log(`\n🌍 [DIGITAL TWIN] Update for valve ${updateData.valveId} due to ${updateData.reason}:`);
                     console.log(JSON.stringify(updateData.state, null, 2));
                     this.emit('deviceUpdate', updateData);
                     this.deviceStore.save(this.devices);
@@ -595,7 +595,7 @@ class SmartHub extends EventEmitter {
         const isInteractiveCli = Boolean(process.stdin.isTTY && process.stdout.isTTY);
 
         if (!isInteractiveCli) {
-            console.log('[CLI] Kein interaktives TTY erkannt, CLI deaktiviert');
+            console.log('[CLI] No interactive TTY detected, CLI disabled');
             return;
         }
 
@@ -614,14 +614,14 @@ class SmartHub extends EventEmitter {
                 rlCli.prompt();
             } catch (err) {
                 if (err?.code !== 'ERR_USE_AFTER_CLOSE') {
-                    console.error('[CLI] prompt fehlgeschlagen:', err);
+                    console.error('[CLI] Prompt failed:', err);
                 }
             }
         };
 
         rlCli.on('close', () => {
             cliClosed = true;
-            console.log('[CLI] Readline geschlossen');
+            console.log('[CLI] Readline closed');
         });
 
         setTimeout(safePrompt, 1000);
@@ -632,19 +632,19 @@ class SmartHub extends EventEmitter {
             const deviceList = Array.from(this.devices.values());
 
             if (cmd === 'list' || cmd === 'lsit') {
-                console.log('\n=== VERBUNDENE VENTILE ===');
-                if (deviceList.length === 0) console.log('  [!] Noch keine Ventile gefunden.');
+                console.log('\n=== CONNECTED VALVES ===');
+                if (deviceList.length === 0) console.log('  [!] No valves found yet.');
 
                 deviceList.forEach((dev) => {
-                    console.log(` [Addr: ${dev.deviceAddress}] ID: ${dev.valveId} | Online: ${dev.isOnline ? 'Ja' : 'Nein'} | RF-Kanal: ${dev.channelCode - 1}`);
+                    console.log(` [Addr: ${dev.deviceAddress}] ID: ${dev.valveId} | Online: ${dev.isOnline ? 'Yes' : 'No'} | RF channel: ${dev.channelCode - 1}`);
                     for (let ch = 1; ch <= dev.channelCount; ch++) {
                         const info = dev.channels[ch];
                         if (info) {
-                            console.log(`    └─ Ventil ${ch}: ${info.status} | Restzeit: ${info.remaining}s`);
+                            console.log(`    └─ Valve ${ch}: ${info.status} | Remaining: ${info.remaining}s`);
                         }
                     }
                 });
-                console.log('==========================\n');
+                console.log('========================\n');
                 safePrompt();
                 return;
             }
@@ -653,12 +653,12 @@ class SmartHub extends EventEmitter {
                 const mode = (args[1] || '').toLowerCase();
                 if (mode === 'on') {
                     this.pairingMode = true;
-                    console.log('[+] Pairing-Modus AKTIV');
+                    console.log('[+] Pairing mode ACTIVE');
                 } else if (mode === 'off') {
                     this.pairingMode = false;
-                    console.log('[+] Pairing-Modus AUS');
+                    console.log('[+] Pairing mode OFF');
                 } else {
-                    console.log(`Pairing-Modus: ${this.pairingMode ? 'AN' : 'AUS'}`);
+                    console.log(`Pairing mode: ${this.pairingMode ? 'ON' : 'OFF'}`);
                 }
                 safePrompt();
                 return;
@@ -672,21 +672,21 @@ class SmartHub extends EventEmitter {
                 const targetDevice = deviceList.find(d => d.deviceAddress === targetAddr);
 
                 if (!targetDevice) {
-                    console.log(`[!] Kein Gerät mit der Adresse ${targetAddr} gefunden.`);
+                    console.log(`[!] No device with address ${targetAddr} found.`);
                     safePrompt();
                     return;
                 }
 
-                console.log(`[+] Sende Befehl an Gerät ${targetDevice.valveId} (Addr: ${targetAddr}), Kanal ${valveIndex}...`);
+                console.log(`[+] Sending command to device ${targetDevice.valveId} (Addr: ${targetAddr}), channel ${valveIndex}...`);
                 const action = cmd === 'on'
                     ? targetDevice.valve(valveIndex).on(seconds)
                     : targetDevice.valve(valveIndex).off();
 
                 action.then(res => {
-                    console.log(`\n[ERFOLG] Ventil meldet: ${res.status} (Noch ${res.remainingSeconds} Sekunden)`);
+                    console.log(`\n[OK] Valve reports: ${res.status} (${res.remainingSeconds}s remaining)`);
                     safePrompt();
                 }).catch(err => {
-                    console.log(`\n[FEHLER] ${err.message}`);
+                    console.log(`\n[ERROR] ${err.message}`);
                     safePrompt();
                 });
 
@@ -694,11 +694,11 @@ class SmartHub extends EventEmitter {
             }
 
             if (cmd !== '') {
-                console.log('\n--- BEFEHLE ---');
-                console.log(' list                     -> Zeigt alle Geräte');
-                console.log(' pair [on|off]            -> Pairing-Modus');
-                console.log(' on <adresse> <ventil> [s]-> Ventil einschalten (z.B. on 1 1 600)');
-                console.log(' off <adresse> <ventil>   -> Ventil ausschalten (z.B. off 1 1)');
+                console.log('\n--- COMMANDS ---');
+                console.log(' list                     -> List all devices');
+                console.log(' pair [on|off]            -> Pairing mode');
+                console.log(' on <addr> <valve> [s]    -> Turn valve on (e.g. on 1 1 600)');
+                console.log(' off <addr> <valve>       -> Turn valve off (e.g. off 1 1)');
                 console.log('----------------\n');
             }
 

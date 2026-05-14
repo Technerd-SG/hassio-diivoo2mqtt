@@ -17,7 +17,7 @@ class MqttBridge {
         });
 
         this.client.on('connect', async () => {
-            console.log('[MQTT] Verbunden mit Broker');
+            console.log('[MQTT] Connected to broker');
 
             // Eingehende Befehle von Home Assistant
             this.client.subscribe([
@@ -450,7 +450,7 @@ class MqttBridge {
             try {
                 await this.hub.getGatewayVersion(gatewayId);
             } catch (err) {
-                console.warn(`[MQTT] Konnte Gateway-Version für ${gatewayId} nicht abfragen: ${err.message}`);
+                console.warn(`[MQTT] Could not query gateway version for ${gatewayId}: ${err.message}`);
             }
         }
     }
@@ -475,7 +475,7 @@ class MqttBridge {
         // Fallback: Falls ACK:OTA_OK nicht ankam aber das Gateway jetzt mit der neuen Version antwortet
         const gw = this._getGatewayNode(gatewayId);
         if (gw?.otaPendingVersion && version === gw.otaPendingVersion) {
-            console.log(`[MQTT] OTA-Erfolg per Version-Fallback bestätigt: ${gatewayId} läuft jetzt auf ${version}`);
+            console.log(`[MQTT] OTA success confirmed via version fallback: ${gatewayId} is now on ${version}`);
             this._publish(`diivoo/gateway/${gatewayId}/update`, JSON.stringify({
                 installed_version: version,
                 latest_version: version,
@@ -497,7 +497,7 @@ class MqttBridge {
         gwState.lastUpdateTs = ev.ts || Date.now();
 
         console.log(
-            `[MQTT] Gateway ${ev.gatewayId} ist jetzt ${ev.connected ? 'online' : 'offline'} (${ev.reason || 'unknown'})`
+            `[MQTT] Gateway ${ev.gatewayId} is now ${ev.connected ? 'online' : 'offline'} (${ev.reason || 'unknown'})`
         );
 
         this.publishGatewayState(ev.gatewayId);
@@ -543,7 +543,7 @@ class MqttBridge {
                     in_progress: false
                 }));
             }
-            console.error(`[MQTT] OTA fehlgeschlagen für ${gatewayId}: ${status}`);
+            console.error(`[MQTT] OTA failed for ${gatewayId}: ${status}`);
         }
     }
 
@@ -585,7 +585,7 @@ class MqttBridge {
                     await device.valve(channelId).off();
                 }
             } catch (err) {
-                console.error(`[MQTT] Ventilkommando fehlgeschlagen: ${err.message}`);
+                console.error(`[MQTT] Valve command failed: ${err.message}`);
             }
 
             return;
@@ -600,7 +600,7 @@ class MqttBridge {
             const desiredState = this._extractOnOff(raw);
 
             if (!desiredState) {
-                console.warn(`[MQTT] Unbekannter LED-Payload für ${gatewayId}: ${raw}`);
+                console.warn(`[MQTT] Unknown LED payload for ${gatewayId}: ${raw}`);
                 return;
             }
 
@@ -613,7 +613,7 @@ class MqttBridge {
 
                 this.publishGatewayState(gatewayId);
             } catch (err) {
-                console.error(`[MQTT] LED-Kommando fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] LED command failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -628,7 +628,7 @@ class MqttBridge {
             try {
                 await this.hub.startGatewayPortal(gatewayId);
             } catch (err) {
-                console.error(`[MQTT] PORTAL fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] PORTAL command failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -643,7 +643,7 @@ class MqttBridge {
             try {
                 await this.hub.clearGatewayWifi(gatewayId);
             } catch (err) {
-                console.error(`[MQTT] CLEARWIFI fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] CLEARWIFI command failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -661,7 +661,7 @@ class MqttBridge {
                     gwNode.getVersion().catch(() => {});
                 }
             } catch (err) {
-                console.error(`[MQTT] VERSION GET fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] VERSION GET failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -677,10 +677,10 @@ class MqttBridge {
             if (messageStr === 'INSTALL') {
                 if (this.hub.otaManager) {
                     const port = process.env.WEB_PORT || 8099;
-                    console.log(`[MQTT] Triggere OTA Update für ${gatewayId} via Home Assistant`);
+                    console.log(`[MQTT] Triggering OTA update for ${gatewayId} via Home Assistant`);
                     // in_progress / Status-Updates kommen jetzt über gatewayOtaStatus Events vom ESP32
                     this.hub.otaManager.triggerUpdate(gatewayId, null, port).catch(err => {
-                        console.error(`[MQTT] OTA Fehler: ${err.message}`);
+                        console.error(`[MQTT] OTA error: ${err.message}`);
                     });
                 }
             }

@@ -33,7 +33,7 @@ class OtaManager extends EventEmitter {
     }
 
     async checkForUpdates() {
-        console.log('[OTA] Prüfe auf Firmware-Updates unter:', this.versionsUrl);
+        console.log('[OTA] Checking for firmware updates at:', this.versionsUrl);
         try {
             // Zuerst die aktuelle Version von allen verbundenen Gateways frisch abfragen
             for (const gw of this.hub.gateways.values()) {
@@ -44,7 +44,7 @@ class OtaManager extends EventEmitter {
 
             const versionsData = await this._fetchJson(this.versionsUrl);
             if (!versionsData || typeof versionsData !== 'object') {
-                throw new Error('Ungültiges versions.json Format');
+                throw new Error('Invalid versions.json format');
             }
 
             let updatesFound = false;
@@ -56,7 +56,7 @@ class OtaManager extends EventEmitter {
                 for (const gw of this.hub.gateways.values()) {
                     if (gw.lastVersion && gw.lastVersion.model === model) {
                         if (this.isVersionNewer(gw.lastVersion.version, info.version)) {
-                            console.log(`[OTA] Update für Gateway ${gw.id} gefunden: ${gw.lastVersion.version} -> ${info.version}`);
+                            console.log(`[OTA] Update found for gateway ${gw.id}: ${gw.lastVersion.version} -> ${info.version}`);
                             updatesFound = true;
                             this.emit('updateAvailable', {
                                 gatewayId: gw.id,
@@ -77,7 +77,7 @@ class OtaManager extends EventEmitter {
             }
 
         } catch (err) {
-            console.error('[OTA] Fehler beim Update-Check:', err.message);
+            console.error('[OTA] Error checking for updates:', err.message);
         }
     }
 
@@ -118,7 +118,7 @@ class OtaManager extends EventEmitter {
     evaluateGatewayVersion(gatewayId) {
         const info = this.getUpdateInfo(gatewayId);
         if (info && info.hasUpdate) {
-            console.log(`[OTA] Update für Gateway ${gatewayId} gefunden: ${info.currentVersion} -> ${info.latestVersion}`);
+            console.log(`[OTA] Update found for gateway ${gatewayId}: ${info.currentVersion} -> ${info.latestVersion}`);
             // Herunterladen der Binaries vorsorglich starten
             const latest = this.latestVersions[info.model];
             if (latest) {
@@ -135,11 +135,11 @@ class OtaManager extends EventEmitter {
 
     async triggerUpdate(gatewayId, _, localServerPort) {
         const gw = this.hub.gateways.get(gatewayId);
-        if (!gw || !gw.isConnected) throw new Error('Gateway nicht gefunden oder nicht verbunden');
-        if (!gw.lastVersion) throw new Error('Version des Gateways noch nicht bekannt – bitte kurz warten');
+        if (!gw || !gw.isConnected) throw new Error('Gateway not found or not connected');
+        if (!gw.lastVersion) throw new Error('Gateway version not yet known — please wait a moment');
 
         const latest = this.latestVersions[gw.lastVersion.model];
-        if (!latest) throw new Error('Kein Update für dieses Modell hinterlegt');
+        if (!latest) throw new Error('No update available for this model');
 
         const localFileName = `${gw.lastVersion.model}_${latest.version}.bin`;
         const localPath = path.join(this.otaDir, localFileName);
@@ -150,18 +150,18 @@ class OtaManager extends EventEmitter {
 
         // Lass den ESP32 aktiv die erreichbare IP herausfinden
         const port = localServerPort || process.env.WEB_PORT || 8099;
-        console.log(`[OTA] Sende IP-Probe an Gateway ${gatewayId}...`);
+        console.log(`[OTA] Sending IP probe to gateway ${gatewayId}...`);
         const addonIp = await gw.probeAddonIp(port);
 
         const otaUrl = `http://${addonIp}:${port}/ota/${localFileName}`;
-        console.log(`[OTA] Sende Update-Befehl an Gateway ${gatewayId}: ${otaUrl}`);
+        console.log(`[OTA] Sending update command to gateway ${gatewayId}: ${otaUrl}`);
 
         if (gw.isConnected) {
             gw.otaPendingVersion = latest.version; // Merken, auf welche Version wir updaten
             gw.sendOta(otaUrl);
             return true;
         } else {
-            throw new Error('Gateway ist nicht verbunden');
+            throw new Error('Gateway is not connected');
         }
     }
 
@@ -199,7 +199,7 @@ class OtaManager extends EventEmitter {
                 return resolve(dest);
             }
 
-            console.log(`[OTA] Lade Firmware herunter: ${url}`);
+            console.log(`[OTA] Downloading firmware: ${url}`);
 
             const client = url.startsWith('https') ? https : http;
             const request = client.get(url, (res) => {
