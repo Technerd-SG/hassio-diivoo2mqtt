@@ -1,0 +1,12 @@
+{
+  "valve": "Supapă {ch}",
+  "valve_remaining": "Supapă {ch} Timp rămas",
+  "valve_source": "Supapă {ch} Sursă",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versiune",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Buton",
+  "gateway_portal": "Gateway Deschide portal",
+  "gateway_clearwifi": "Gateway Șterge WiFi",
+  "gateway_refresh_version": "Gateway Actualizează versiunea"
+}

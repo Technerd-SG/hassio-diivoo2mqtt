@@ -1,0 +1,12 @@
+{
+  "valve": "Βαλβίδα {ch}",
+  "valve_remaining": "Βαλβίδα {ch} Υπόλοιπος χρόνος",
+  "valve_source": "Βαλβίδα {ch} Πηγή",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Έκδοση",
+  "gateway_model": "Gateway Μοντέλο",
+  "gateway_button": "Gateway Κουμπί",
+  "gateway_portal": "Gateway Άνοιγμα πύλης",
+  "gateway_clearwifi": "Gateway Εκκαθάριση WiFi",
+  "gateway_refresh_version": "Gateway Ανανέωση έκδοσης"
+}

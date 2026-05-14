@@ -1,0 +1,12 @@
+{
+  "valve": "Valf {ch}",
+  "valve_remaining": "Valf {ch} Kalan süre",
+  "valve_source": "Valf {ch} Kaynak",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Sürüm",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Düğme",
+  "gateway_portal": "Gateway Portal aç",
+  "gateway_clearwifi": "Gateway WiFi temizle",
+  "gateway_refresh_version": "Gateway Sürümü yenile"
+}

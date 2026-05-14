@@ -1,0 +1,12 @@
+{
+  "valve": "صمام {ch}",
+  "valve_remaining": "صمام {ch} الوقت المتبقي",
+  "valve_source": "صمام {ch} المصدر",
+  "gateway_led": "البوابة LED",
+  "gateway_version": "البوابة الإصدار",
+  "gateway_model": "البوابة الطراز",
+  "gateway_button": "البوابة الزر",
+  "gateway_portal": "البوابة فتح البوابة الإلكترونية",
+  "gateway_clearwifi": "البوابة مسح WiFi",
+  "gateway_refresh_version": "البوابة تحديث الإصدار"
+}

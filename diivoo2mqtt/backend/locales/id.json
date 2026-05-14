@@ -1,0 +1,12 @@
+{
+  "valve": "Katup {ch}",
+  "valve_remaining": "Katup {ch} Waktu tersisa",
+  "valve_source": "Katup {ch} Sumber",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versi",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Tombol",
+  "gateway_portal": "Gateway Buka portal",
+  "gateway_clearwifi": "Gateway Hapus WiFi",
+  "gateway_refresh_version": "Gateway Perbarui versi"
+}

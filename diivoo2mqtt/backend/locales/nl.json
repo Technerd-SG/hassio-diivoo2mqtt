@@ -1,0 +1,12 @@
+{
+  "valve": "Klep {ch}",
+  "valve_remaining": "Klep {ch} Resterende tijd",
+  "valve_source": "Klep {ch} Bron",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versie",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Knop",
+  "gateway_portal": "Gateway Portaal openen",
+  "gateway_clearwifi": "Gateway WiFi wissen",
+  "gateway_refresh_version": "Gateway Versie vernieuwen"
+}

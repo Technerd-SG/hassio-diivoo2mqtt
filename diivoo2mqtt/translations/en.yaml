@@ -1,0 +1,16 @@
+configuration:
+  mqtt_host:
+    name: MQTT Host
+    description: Hostname or IP address of the MQTT broker. Defaults to the built-in Mosquitto broker.
+  mqtt_port:
+    name: MQTT Port
+    description: Port number of the MQTT broker.
+  mqtt_username:
+    name: MQTT Username
+    description: Username for MQTT authentication. Leave empty if the broker does not require authentication.
+  mqtt_password:
+    name: MQTT Password
+    description: Password for MQTT authentication. Leave empty if the broker does not require authentication.
+  language:
+    name: Entity Language
+    description: Language used for Home Assistant entity names created via MQTT discovery.

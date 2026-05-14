@@ -1,0 +1,12 @@
+{
+  "valve": "Van {ch}",
+  "valve_remaining": "Van {ch} Thời gian còn lại",
+  "valve_source": "Van {ch} Nguồn",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Phiên bản",
+  "gateway_model": "Gateway Mẫu",
+  "gateway_button": "Gateway Nút",
+  "gateway_portal": "Gateway Mở cổng",
+  "gateway_clearwifi": "Gateway Xóa WiFi",
+  "gateway_refresh_version": "Gateway Làm mới phiên bản"
+}

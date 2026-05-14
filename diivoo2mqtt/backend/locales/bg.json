@@ -1,0 +1,12 @@
+{
+  "valve": "Вентил {ch}",
+  "valve_remaining": "Вентил {ch} Оставащо време",
+  "valve_source": "Вентил {ch} Източник",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Версия",
+  "gateway_model": "Gateway Модел",
+  "gateway_button": "Gateway Бутон",
+  "gateway_portal": "Gateway Отвори портал",
+  "gateway_clearwifi": "Gateway Изчисти WiFi",
+  "gateway_refresh_version": "Gateway Обнови версия"
+}

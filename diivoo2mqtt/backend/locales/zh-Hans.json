@@ -1,0 +1,12 @@
+{
+  "valve": "阀门 {ch}",
+  "valve_remaining": "阀门 {ch} 剩余时间",
+  "valve_source": "阀门 {ch} 来源",
+  "gateway_led": "网关 LED",
+  "gateway_version": "网关版本",
+  "gateway_model": "网关型号",
+  "gateway_button": "网关按钮",
+  "gateway_portal": "网关打开门户",
+  "gateway_clearwifi": "网关清除 WiFi",
+  "gateway_refresh_version": "网关刷新版本"
+}

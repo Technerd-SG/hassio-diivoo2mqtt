@@ -1,0 +1,12 @@
+{
+  "valve": "Клапан {ch}",
+  "valve_remaining": "Клапан {ch} Оставшееся время",
+  "valve_source": "Клапан {ch} Источник",
+  "gateway_led": "Шлюз LED",
+  "gateway_version": "Шлюз Версия",
+  "gateway_model": "Шлюз Модель",
+  "gateway_button": "Шлюз Кнопка",
+  "gateway_portal": "Шлюз Открыть портал",
+  "gateway_clearwifi": "Шлюз Очистить WiFi",
+  "gateway_refresh_version": "Шлюз Обновить версию"
+}

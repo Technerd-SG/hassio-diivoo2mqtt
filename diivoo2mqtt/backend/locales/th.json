@@ -1,0 +1,12 @@
+{
+  "valve": "วาล์ว {ch}",
+  "valve_remaining": "วาล์ว {ch} เวลาที่เหลือ",
+  "valve_source": "วาล์ว {ch} แหล่งที่มา",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway เวอร์ชัน",
+  "gateway_model": "Gateway รุ่น",
+  "gateway_button": "Gateway ปุ่ม",
+  "gateway_portal": "Gateway เปิดพอร์ทัล",
+  "gateway_clearwifi": "Gateway ล้าง WiFi",
+  "gateway_refresh_version": "Gateway รีเฟรชเวอร์ชัน"
+}

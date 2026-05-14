@@ -1,0 +1,12 @@
+{
+  "valve": "שסתום {ch}",
+  "valve_remaining": "שסתום {ch} זמן נותר",
+  "valve_source": "שסתום {ch} מקור",
+  "gateway_led": "שער LED",
+  "gateway_version": "שער גרסה",
+  "gateway_model": "שער דגם",
+  "gateway_button": "שער כפתור",
+  "gateway_portal": "שער פתח פורטל",
+  "gateway_clearwifi": "שער נקה WiFi",
+  "gateway_refresh_version": "שער רענן גרסה"
+}

@@ -1,0 +1,12 @@
+{
+  "valve": "Valvola {ch}",
+  "valve_remaining": "Valvola {ch} Tempo rimanente",
+  "valve_source": "Valvola {ch} Sorgente",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versione",
+  "gateway_model": "Gateway Modello",
+  "gateway_button": "Gateway Pulsante",
+  "gateway_portal": "Gateway Apri portale",
+  "gateway_clearwifi": "Gateway Cancella WiFi",
+  "gateway_refresh_version": "Gateway Aggiorna versione"
+}
