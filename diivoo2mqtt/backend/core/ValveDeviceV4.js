@@ -1171,10 +1171,10 @@ class ValveDevice extends EventEmitter {
         }
 
         let batteryPercent = 0;
-        if (this.lastBatteryText.includes('4 Balken')) batteryPercent = 100;
-        else if (this.lastBatteryText.includes('3 Balken')) batteryPercent = 75;
-        else if (this.lastBatteryText.includes('2 Balken')) batteryPercent = 50;
-        else if (this.lastBatteryText.includes('1 Balken')) batteryPercent = 25;
+        if (this.lastBatteryText.includes('4 bar')) batteryPercent = 100;
+        else if (this.lastBatteryText.includes('3 bar')) batteryPercent = 75;
+        else if (this.lastBatteryText.includes('2 bar')) batteryPercent = 50;
+        else if (this.lastBatteryText.includes('1 bar')) batteryPercent = 25;
 
         return {
             valveId: this.valveId,
