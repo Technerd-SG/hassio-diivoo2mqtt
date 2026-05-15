@@ -1,60 +1,29 @@
 import { io } from 'socket.io-client'
 
-function stripTrailingSlash(value = '') {
-  return value.replace(/\/+$/, '')
-}
-
-function normalizePath(value = '') {
-  if (!value) return '/socket.io'
-  const withLeadingSlash = value.startsWith('/') ? value : `/${value}`
-  return withLeadingSlash.replace(/\/+$/, '')
-}
-
-export function detectIngressBase() {
-  const candidates = [
-    window.location.pathname,
-    new URL(document.baseURI).pathname,
-    import.meta.env.BASE_URL,
-  ].filter(Boolean)
-
-  for (const candidate of candidates) {
-    const match = candidate.match(/^(\/api\/hassio_ingress\/[^/]+)/)
-    if (match) {
-      return match[1]
-    }
-  }
-
-  return ''
-}
-
-function detectSocketPath() {
+async function resolveSocketPath() {
   if (import.meta.env.VITE_SOCKET_PATH) {
-    return normalizePath(import.meta.env.VITE_SOCKET_PATH)
+    const p = import.meta.env.VITE_SOCKET_PATH
+    return p.startsWith('/') ? p : `/${p}`
   }
 
-  const ingressBase = detectIngressBase()
-  if (ingressBase) {
-    return `${stripTrailingSlash(ingressBase)}/socket.io`
-  }
+  try {
+    const res = await fetch('./api/runtime-config')
+    if (res.ok) {
+      const { ingressPath } = await res.json()
+      if (ingressPath) return `${ingressPath}/socket.io`
+    }
+  } catch (_) {}
 
-  const baseUrl = import.meta.env.BASE_URL || '/'
-  const normalizedBase =
-    baseUrl && baseUrl !== '/'
-      ? normalizePath(baseUrl)
-      : ''
-
-  return normalizedBase
-    ? `${stripTrailingSlash(normalizedBase)}/socket.io`
-    : '/socket.io'
+  return '/socket.io'
 }
 
-export function createSocket() {
+export async function createSocket() {
   const url = import.meta.env.VITE_SOCKET_URL || window.location.origin
-  const path = detectSocketPath()
+  const path = await resolveSocketPath()
 
   return io(url, {
     path,
-    transports: ['websocket'],
+    transports: ['polling', 'websocket'],
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 500,
