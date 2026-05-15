@@ -138,12 +138,20 @@
                       <span v-if="log.packetCount > 1"> · {{ log.packetCount }} Packets</span>
                     </span>
                   </div>
-                  <button
-                    @click="downloadJoinLog(log.valveId)"
-                    class="theme-button-secondary min-h-[32px] rounded-full border px-3 text-[11px] font-bold transition hover:-translate-y-[1px]"
-                  >
-                    Download Log
-                  </button>
+                  <div class="flex gap-2">
+                    <button
+                      @click="downloadJoinLog(log.valveId)"
+                      class="theme-button-secondary min-h-[32px] rounded-full border px-3 text-[11px] font-bold transition hover:-translate-y-[1px]"
+                    >
+                      Download Log
+                    </button>
+                    <button
+                      @click="dismissDiagnosticLog(log.valveId)"
+                      class="theme-button-secondary min-h-[32px] rounded-full border px-3 text-[11px] font-bold transition hover:-translate-y-[1px]"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
                 <div class="theme-text-muted text-xs">
                   Gateway: {{ log.gatewayId }} · RSSI: {{ log.rssi }}dBm
@@ -1437,6 +1445,17 @@ async function downloadJoinLog(valveId) {
   } catch (err) {
     console.error('Download failed:', err)
     alert(`Failed to download join log: ${err.message}`)
+  }
+}
+
+async function dismissDiagnosticLog(valveId) {
+  try {
+    const basePath = window.location.pathname.endsWith('/')
+      ? window.location.pathname
+      : window.location.pathname + '/'
+    await fetch(`${basePath}api/diagnostic/unknown-devices/${valveId}`, { method: 'DELETE' })
+  } catch (err) {
+    console.error('Dismiss failed:', err)
   }
 }
 
