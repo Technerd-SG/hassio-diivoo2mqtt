@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Gumb",
   "gateway_portal": "Gateway Odpri portal",
   "gateway_clearwifi": "Gateway Počisti WiFi",
-  "gateway_refresh_version": "Gateway Posodobi različico"
+  "gateway_refresh_version": "Gateway Posodobi različico",
+  "firmware_update": "Firmware Update"
 }

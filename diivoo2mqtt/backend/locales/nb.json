@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Knapp",
   "gateway_portal": "Gateway Åpne portal",
   "gateway_clearwifi": "Gateway Slett WiFi",
-  "gateway_refresh_version": "Gateway Oppdater versjon"
+  "gateway_refresh_version": "Gateway Oppdater versjon",
+  "firmware_update": "Firmware Update"
 }

@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Buton",
   "gateway_portal": "Gateway Deschide portal",
   "gateway_clearwifi": "Gateway Șterge WiFi",
-  "gateway_refresh_version": "Gateway Actualizează versiunea"
+  "gateway_refresh_version": "Gateway Actualizează versiunea",
+  "firmware_update": "Firmware Update"
 }

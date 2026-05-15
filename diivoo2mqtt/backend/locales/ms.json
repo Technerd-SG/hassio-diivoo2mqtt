@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Butang",
   "gateway_portal": "Gateway Buka portal",
   "gateway_clearwifi": "Gateway Padam WiFi",
-  "gateway_refresh_version": "Gateway Muat semula versi"
+  "gateway_refresh_version": "Gateway Muat semula versi",
+  "firmware_update": "Firmware Update"
 }

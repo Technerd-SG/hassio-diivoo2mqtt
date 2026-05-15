@@ -8,5 +8,6 @@
   "gateway_button": "ゲートウェイ ボタン",
   "gateway_portal": "ゲートウェイ ポータルを開く",
   "gateway_clearwifi": "ゲートウェイ WiFi クリア",
-  "gateway_refresh_version": "ゲートウェイ バージョン更新"
+  "gateway_refresh_version": "ゲートウェイ バージョン更新",
+  "firmware_update": "Firmware Update"
 }

@@ -8,5 +8,6 @@
   "gateway_button": "閘道按鈕",
   "gateway_portal": "閘道開啟入口",
   "gateway_clearwifi": "閘道清除 WiFi",
-  "gateway_refresh_version": "閘道重新整理版本"
+  "gateway_refresh_version": "閘道重新整理版本",
+  "firmware_update": "Firmware Update"
 }

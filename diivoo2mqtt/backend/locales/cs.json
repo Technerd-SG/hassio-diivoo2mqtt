@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Tlačítko",
   "gateway_portal": "Gateway Otevřít portál",
   "gateway_clearwifi": "Gateway Vymazat WiFi",
-  "gateway_refresh_version": "Gateway Aktualizovat verzi"
+  "gateway_refresh_version": "Gateway Aktualizovat verzi",
+  "firmware_update": "Firmware Update"
 }

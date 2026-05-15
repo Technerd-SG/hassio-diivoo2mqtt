@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Nút",
   "gateway_portal": "Gateway Mở cổng",
   "gateway_clearwifi": "Gateway Xóa WiFi",
-  "gateway_refresh_version": "Gateway Làm mới phiên bản"
+  "gateway_refresh_version": "Gateway Làm mới phiên bản",
+  "firmware_update": "Firmware Update"
 }

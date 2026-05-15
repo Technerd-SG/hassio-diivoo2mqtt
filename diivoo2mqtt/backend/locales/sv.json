@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Knapp",
   "gateway_portal": "Gateway Öppna portal",
   "gateway_clearwifi": "Gateway Rensa WiFi",
-  "gateway_refresh_version": "Gateway Uppdatera version"
+  "gateway_refresh_version": "Gateway Uppdatera version",
+  "firmware_update": "Firmware Update"
 }

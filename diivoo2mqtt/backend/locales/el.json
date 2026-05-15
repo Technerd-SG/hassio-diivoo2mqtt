@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Κουμπί",
   "gateway_portal": "Gateway Άνοιγμα πύλης",
   "gateway_clearwifi": "Gateway Εκκαθάριση WiFi",
-  "gateway_refresh_version": "Gateway Ανανέωση έκδοσης"
+  "gateway_refresh_version": "Gateway Ανανέωση έκδοσης",
+  "firmware_update": "Firmware Update"
 }

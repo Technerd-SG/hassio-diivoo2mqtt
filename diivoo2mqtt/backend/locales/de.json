@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Taste",
   "gateway_portal": "Gateway Portal starten",
   "gateway_clearwifi": "Gateway WLAN löschen",
-  "gateway_refresh_version": "Gateway Version abfragen"
+  "gateway_refresh_version": "Gateway Version abfragen",
+  "firmware_update": "Firmware-Update"
 }

@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Mygtukas",
   "gateway_portal": "Gateway Atidaryti portalą",
   "gateway_clearwifi": "Gateway Išvalyti WiFi",
-  "gateway_refresh_version": "Gateway Atnaujinti versiją"
+  "gateway_refresh_version": "Gateway Atnaujinti versiją",
+  "firmware_update": "Firmware Update"
 }

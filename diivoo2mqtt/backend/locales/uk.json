@@ -8,5 +8,6 @@
   "gateway_button": "Шлюз Кнопка",
   "gateway_portal": "Шлюз Відкрити портал",
   "gateway_clearwifi": "Шлюз Очистити WiFi",
-  "gateway_refresh_version": "Шлюз Оновити версію"
+  "gateway_refresh_version": "Шлюз Оновити версію",
+  "firmware_update": "Firmware Update"
 }

@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Knop",
   "gateway_portal": "Gateway Portaal openen",
   "gateway_clearwifi": "Gateway WiFi wissen",
-  "gateway_refresh_version": "Gateway Versie vernieuwen"
+  "gateway_refresh_version": "Gateway Versie vernieuwen",
+  "firmware_update": "Firmware Update"
 }

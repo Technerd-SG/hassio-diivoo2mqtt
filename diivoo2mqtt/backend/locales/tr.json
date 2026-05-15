@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Düğme",
   "gateway_portal": "Gateway Portal aç",
   "gateway_clearwifi": "Gateway WiFi temizle",
-  "gateway_refresh_version": "Gateway Sürümü yenile"
+  "gateway_refresh_version": "Gateway Sürümü yenile",
+  "firmware_update": "Firmware Update"
 }

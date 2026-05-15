@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Pulsante",
   "gateway_portal": "Gateway Apri portale",
   "gateway_clearwifi": "Gateway Cancella WiFi",
-  "gateway_refresh_version": "Gateway Aggiorna versione"
+  "gateway_refresh_version": "Gateway Aggiorna versione",
+  "firmware_update": "Firmware Update"
 }

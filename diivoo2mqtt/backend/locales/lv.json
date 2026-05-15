@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Poga",
   "gateway_portal": "Gateway Atvērt portālu",
   "gateway_clearwifi": "Gateway Notīrīt WiFi",
-  "gateway_refresh_version": "Gateway Atjaunināt versiju"
+  "gateway_refresh_version": "Gateway Atjaunināt versiju",
+  "firmware_update": "Firmware Update"
 }

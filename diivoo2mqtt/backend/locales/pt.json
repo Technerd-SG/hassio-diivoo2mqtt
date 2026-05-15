@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Botão",
   "gateway_portal": "Gateway Abrir portal",
   "gateway_clearwifi": "Gateway Limpar WiFi",
-  "gateway_refresh_version": "Gateway Atualizar versão"
+  "gateway_refresh_version": "Gateway Atualizar versão",
+  "firmware_update": "Firmware Update"
 }

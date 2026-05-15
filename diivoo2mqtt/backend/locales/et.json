@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Nupp",
   "gateway_portal": "Gateway Ava portaal",
   "gateway_clearwifi": "Gateway Kustuta WiFi",
-  "gateway_refresh_version": "Gateway Uuenda versiooni"
+  "gateway_refresh_version": "Gateway Uuenda versiooni",
+  "firmware_update": "Firmware Update"
 }

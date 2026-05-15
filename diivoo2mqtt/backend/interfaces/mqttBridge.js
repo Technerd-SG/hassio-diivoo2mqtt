@@ -6,10 +6,22 @@ const fs = require('fs');
 function loadLocale(lang) {
     const localesDir = path.join(__dirname, '..', 'locales');
     const file = path.join(localesDir, `${lang}.json`);
-    if (fs.existsSync(file)) {
-        return JSON.parse(fs.readFileSync(file, 'utf8'));
+
+    try {
+        if (fs.existsSync(file)) {
+            return JSON.parse(fs.readFileSync(file, 'utf8'));
+        }
+    } catch (err) {
+        console.warn(`[MQTT] Failed to load locale '${lang}': ${err.message}. Falling back to en.json.`);
     }
-    return JSON.parse(fs.readFileSync(path.join(localesDir, 'en.json'), 'utf8'));
+
+    const enFile = path.join(localesDir, 'en.json');
+    try {
+        return JSON.parse(fs.readFileSync(enFile, 'utf8'));
+    } catch (err) {
+        console.warn(`[MQTT] Failed to load en.json locale: ${err.message}. Using hardcoded fallback.`);
+        return {};
+    }
 }
 
 function t(strings, key, vars = {}) {
@@ -411,7 +423,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/update/gateway_${gatewayId}_fw/config`,
             JSON.stringify({
-                name: null,
+                name: t(this.strings, 'firmware_update'),
                 unique_id: `diivoo_gateway_${gatewayId}_update`,
                 state_topic: `diivoo/gateway/${gatewayId}/update`,
                 command_topic: `diivoo/gateway/${gatewayId}/update/set`,

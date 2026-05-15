@@ -8,5 +8,6 @@
   "gateway_button": "Gateway Knap",
   "gateway_portal": "Gateway Åbn portal",
   "gateway_clearwifi": "Gateway Ryd WiFi",
-  "gateway_refresh_version": "Gateway Opdater version"
+  "gateway_refresh_version": "Gateway Opdater version",
+  "firmware_update": "Firmware Update"
 }
