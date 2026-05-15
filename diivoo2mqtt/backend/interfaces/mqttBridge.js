@@ -1,11 +1,31 @@
 // interfaces/mqttBridge.js
 const mqtt = require('mqtt');
+const path = require('path');
+const fs = require('fs');
+
+function loadLocale(lang) {
+    const localesDir = path.join(__dirname, '..', 'locales');
+    const file = path.join(localesDir, `${lang}.json`);
+    if (fs.existsSync(file)) {
+        return JSON.parse(fs.readFileSync(file, 'utf8'));
+    }
+    return JSON.parse(fs.readFileSync(path.join(localesDir, 'en.json'), 'utf8'));
+}
+
+function t(strings, key, vars = {}) {
+    let str = strings[key] || key;
+    for (const [k, v] of Object.entries(vars)) {
+        str = str.replace(`{${k}}`, v);
+    }
+    return str;
+}
 
 class MqttBridge {
     constructor(hub, config) {
         this.hub = hub;
         this.config = config;
         this.discoveryPrefix = config.discoveryPrefix || 'homeassistant';
+        this.strings = loadLocale(config.language || 'en');
 
         this.discoveredValves = new Set();
         this.discoveredGateways = new Set();
@@ -157,7 +177,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/sensor/${valveId}_battery/config`,
             JSON.stringify({
-                name: 'Batterie',
+                name: null,
                 unique_id: `diivoo_${valveId}_battery`,
                 state_topic: stateTopic,
                 value_template: '{{ value_json.batteryPercent }}',
@@ -172,7 +192,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/binary_sensor/${valveId}_online/config`,
             JSON.stringify({
-                name: 'Verbindung',
+                name: null,
                 unique_id: `diivoo_${valveId}_online`,
                 state_topic: stateTopic,
                 value_template: "{{ 'ON' if value_json.isOnline else 'OFF' }}",
@@ -188,7 +208,7 @@ class MqttBridge {
             this._publish(
                 `${discoveryPrefix}/switch/${valveId}_ch${ch}/config`,
                 JSON.stringify({
-                    name: `Ventil ${ch}`,
+                    name: t(this.strings, 'valve', { ch }),
                     unique_id: `diivoo_${valveId}_valve_${ch}`,
                     state_topic: stateTopic,
                     command_topic: `diivoo/${valveId}/valve/${ch}/set`,
@@ -204,7 +224,7 @@ class MqttBridge {
             this._publish(
                 `${discoveryPrefix}/sensor/${valveId}_ch${ch}_remaining/config`,
                 JSON.stringify({
-                    name: `Ventil ${ch} Restzeit`,
+                    name: t(this.strings, 'valve_remaining', { ch }),
                     unique_id: `diivoo_${valveId}_remaining_${ch}`,
                     state_topic: stateTopic,
                     value_template: `{{ value_json.channels['${ch}'].remainingLive }}`,
@@ -218,7 +238,7 @@ class MqttBridge {
             this._publish(
                 `${discoveryPrefix}/sensor/${valveId}_ch${ch}_source/config`,
                 JSON.stringify({
-                    name: `Ventil ${ch} Auslöser`,
+                    name: t(this.strings, 'valve_source', { ch }),
                     unique_id: `diivoo_${valveId}_source_${ch}`,
                     state_topic: stateTopic,
                     value_template: `{{ value_json.channels['${ch}'].source }}`,
@@ -280,7 +300,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/light/gateway_${gatewayId}_led/config`,
             JSON.stringify({
-                name: 'Gateway LED',
+                name: t(this.strings, 'gateway_led'),
                 unique_id: `diivoo_gateway_${gatewayId}_led`,
                 schema: 'json',
                 state_topic: stateTopic,
@@ -294,7 +314,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/sensor/gateway_${gatewayId}_version/config`,
             JSON.stringify({
-                name: 'Gateway Version',
+                name: t(this.strings, 'gateway_version'),
                 unique_id: `diivoo_gateway_${gatewayId}_version`,
                 state_topic: stateTopic,
                 value_template: '{{ value_json.version }}',
@@ -308,7 +328,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/sensor/gateway_${gatewayId}_model/config`,
             JSON.stringify({
-                name: 'Gateway Modell',
+                name: t(this.strings, 'gateway_model'),
                 unique_id: `diivoo_gateway_${gatewayId}_model`,
                 state_topic: stateTopic,
                 value_template: '{{ value_json.model }}',
@@ -322,7 +342,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/binary_sensor/gateway_${gatewayId}_online/config`,
             JSON.stringify({
-                name: 'Gateway Verbindung',
+                name: null,
                 unique_id: `diivoo_gateway_${gatewayId}_online`,
                 state_topic: stateTopic,
                 value_template: "{{ 'ON' if value_json.connected else 'OFF' }}",
@@ -336,7 +356,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/binary_sensor/gateway_${gatewayId}_button/config`,
             JSON.stringify({
-                name: 'Gateway Taste',
+                name: t(this.strings, 'gateway_button'),
                 unique_id: `diivoo_gateway_${gatewayId}_button`,
                 state_topic: stateTopic,
                 value_template: "{{ 'ON' if value_json.buttonPressed else 'OFF' }}",
@@ -349,7 +369,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/button/gateway_${gatewayId}_portal/config`,
             JSON.stringify({
-                name: 'Gateway Portal starten',
+                name: t(this.strings, 'gateway_portal'),
                 unique_id: `diivoo_gateway_${gatewayId}_portal`,
                 command_topic: `diivoo/gateway/${gatewayId}/portal/press`,
                 payload_press: 'PRESS',
@@ -363,7 +383,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/button/gateway_${gatewayId}_clearwifi/config`,
             JSON.stringify({
-                name: 'Gateway WLAN löschen',
+                name: t(this.strings, 'gateway_clearwifi'),
                 unique_id: `diivoo_gateway_${gatewayId}_clearwifi`,
                 command_topic: `diivoo/gateway/${gatewayId}/clearwifi/press`,
                 payload_press: 'PRESS',
@@ -377,7 +397,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/button/gateway_${gatewayId}_refresh_version/config`,
             JSON.stringify({
-                name: 'Gateway Version abfragen',
+                name: t(this.strings, 'gateway_refresh_version'),
                 unique_id: `diivoo_gateway_${gatewayId}_refresh_version`,
                 command_topic: `diivoo/gateway/${gatewayId}/version/get`,
                 payload_press: 'PRESS',
@@ -391,7 +411,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/update/gateway_${gatewayId}_fw/config`,
             JSON.stringify({
-                name: 'Firmware Update',
+                name: null,
                 unique_id: `diivoo_gateway_${gatewayId}_update`,
                 state_topic: `diivoo/gateway/${gatewayId}/update`,
                 command_topic: `diivoo/gateway/${gatewayId}/update/set`,

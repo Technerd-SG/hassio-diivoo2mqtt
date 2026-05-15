@@ -1,0 +1,12 @@
+{
+  "valve": "Ventil {ch}",
+  "valve_remaining": "Ventil {ch} Zostávajúci čas",
+  "valve_source": "Ventil {ch} Zdroj",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Verzia",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Tlačidlo",
+  "gateway_portal": "Gateway Otvoriť portál",
+  "gateway_clearwifi": "Gateway Vymazať WiFi",
+  "gateway_refresh_version": "Gateway Aktualizovať verziu"
+}

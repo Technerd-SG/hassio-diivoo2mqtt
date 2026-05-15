@@ -1,0 +1,12 @@
+{
+  "valve": "Ventil {ch}",
+  "valve_remaining": "Ventil {ch} Preostalo vrijeme",
+  "valve_source": "Ventil {ch} Izvor",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Verzija",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Gumb",
+  "gateway_portal": "Gateway Otvori portal",
+  "gateway_clearwifi": "Gateway Obriši WiFi",
+  "gateway_refresh_version": "Gateway Osvježi verziju"
+}

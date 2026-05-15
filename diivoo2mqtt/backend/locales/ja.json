@@ -1,0 +1,12 @@
+{
+  "valve": "バルブ {ch}",
+  "valve_remaining": "バルブ {ch} 残り時間",
+  "valve_source": "バルブ {ch} ソース",
+  "gateway_led": "ゲートウェイ LED",
+  "gateway_version": "ゲートウェイ バージョン",
+  "gateway_model": "ゲートウェイ モデル",
+  "gateway_button": "ゲートウェイ ボタン",
+  "gateway_portal": "ゲートウェイ ポータルを開く",
+  "gateway_clearwifi": "ゲートウェイ WiFi クリア",
+  "gateway_refresh_version": "ゲートウェイ バージョン更新"
+}

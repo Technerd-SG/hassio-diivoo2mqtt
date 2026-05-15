@@ -1,0 +1,12 @@
+{
+  "valve": "Ventil {ch}",
+  "valve_remaining": "Ventil {ch} Återstående tid",
+  "valve_source": "Ventil {ch} Källa",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Version",
+  "gateway_model": "Gateway Modell",
+  "gateway_button": "Gateway Knapp",
+  "gateway_portal": "Gateway Öppna portal",
+  "gateway_clearwifi": "Gateway Rensa WiFi",
+  "gateway_refresh_version": "Gateway Uppdatera version"
+}

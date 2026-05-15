@@ -1,0 +1,12 @@
+{
+  "valve": "Vožtuvas {ch}",
+  "valve_remaining": "Vožtuvas {ch} Likusis laikas",
+  "valve_source": "Vožtuvas {ch} Šaltinis",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versija",
+  "gateway_model": "Gateway Modelis",
+  "gateway_button": "Gateway Mygtukas",
+  "gateway_portal": "Gateway Atidaryti portalą",
+  "gateway_clearwifi": "Gateway Išvalyti WiFi",
+  "gateway_refresh_version": "Gateway Atnaujinti versiją"
+}

@@ -1,0 +1,12 @@
+{
+  "valve": "Injap {ch}",
+  "valve_remaining": "Injap {ch} Masa berbaki",
+  "valve_source": "Injap {ch} Sumber",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versi",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Butang",
+  "gateway_portal": "Gateway Buka portal",
+  "gateway_clearwifi": "Gateway Padam WiFi",
+  "gateway_refresh_version": "Gateway Muat semula versi"
+}

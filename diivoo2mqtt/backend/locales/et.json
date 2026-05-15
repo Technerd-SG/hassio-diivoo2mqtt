@@ -1,0 +1,12 @@
+{
+  "valve": "Ventiil {ch}",
+  "valve_remaining": "Ventiil {ch} Järelejäänud aeg",
+  "valve_source": "Ventiil {ch} Allikas",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versioon",
+  "gateway_model": "Gateway Mudel",
+  "gateway_button": "Gateway Nupp",
+  "gateway_portal": "Gateway Ava portaal",
+  "gateway_clearwifi": "Gateway Kustuta WiFi",
+  "gateway_refresh_version": "Gateway Uuenda versiooni"
+}

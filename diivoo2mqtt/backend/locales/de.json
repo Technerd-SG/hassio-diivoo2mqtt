@@ -1,0 +1,12 @@
+{
+  "valve": "Ventil {ch}",
+  "valve_remaining": "Ventil {ch} Restzeit",
+  "valve_source": "Ventil {ch} Auslöser",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Version",
+  "gateway_model": "Gateway Modell",
+  "gateway_button": "Gateway Taste",
+  "gateway_portal": "Gateway Portal starten",
+  "gateway_clearwifi": "Gateway WLAN löschen",
+  "gateway_refresh_version": "Gateway Version abfragen"
+}

@@ -26,7 +26,8 @@ const hub = new SmartHub(myHubConfig, myGateways);
 const mqttBridge = new MqttBridge(hub, {
     brokerUrl: process.env.MQTT_BROKER || 'mqtt://127.0.0.1:1883',
     username: process.env.MQTT_USER || '',
-    password: process.env.MQTT_PASSWORD || ''
+    password: process.env.MQTT_PASSWORD || '',
+    language: process.env.MQTT_LANG || 'en'
 });
 
 const webServer = new WebServer(hub, {
