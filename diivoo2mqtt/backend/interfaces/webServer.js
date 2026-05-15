@@ -657,21 +657,15 @@ class WebServer {
     }
 
     async _triggerDeviceRefresh(device, channelId, reason = 'config-change') {
-        if (!device || typeof device.executeWakeUpPing !== 'function') {
+        if (!device || typeof device.sendPingTrigger !== 'function') {
             return;
         }
-
-        console.log(
-            `[Web] Sende Wake-Up Ping an Ventil ${device.valveId}, Kanal ${channelId} wegen ${reason}`
-        );
-
-        // Verwende den robusten Wake-Up Ping (versucht 0x20, fällt auf Legacy 0x82 zurück)
-        const success = await device.executeWakeUpPing(3, 800);
-
-        if (success) {
-            console.log(`[Web] Wake-Up erfolgreich, Ventil ist wach und ruft Einstellungen ab.`);
+        console.log(`[Web] Sending config-refresh ping (0x20/03) to valve ${device.valveId} due to ${reason}`);
+        const followUps = await device.sendPingTrigger(null, 2, 0x03);
+        if (Array.isArray(followUps) && followUps.length > 0) {
+            console.log(`[Web] Config refresh triggered on valve ${device.valveId} — device is pulling updated config.`);
         } else {
-            console.warn(`[Web] Keine direkte Antwort auf Wake-Up Ping von Ventil ${device.valveId} empfangen.`);
+            console.warn(`[Web] No response to config-refresh ping from valve ${device.valveId}.`);
         }
     }
 

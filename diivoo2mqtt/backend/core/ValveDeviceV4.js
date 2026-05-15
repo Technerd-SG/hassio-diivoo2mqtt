@@ -830,12 +830,12 @@ class ValveDevice extends EventEmitter {
         return result;
     }
 
-    async sendPingTrigger(correlationToken = null, maxRetransmits = 2) {
+    async sendPingTrigger(correlationToken = null, maxRetransmits = 2, mode = 0x01) {
         const token = correlationToken ?? this.nextCommandSeq();
 
         for (let attempt = 0; attempt <= maxRetransmits; attempt++) {
             const seq = this.nextCommandSeq();
-            const payload = [token & 0xff, 0x01];
+            const payload = [token & 0xff, mode];
 
             if (attempt === 0) {
                 console.log(
