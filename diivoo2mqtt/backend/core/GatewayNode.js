@@ -64,7 +64,7 @@ class GatewayNode {
             this.lastSeenAt = Date.now();
             this.lastDisconnectReason = 'tcp-connected';
 
-            console.log(`[+] Gateway '${this.id}' TCP verbunden (${this.ip}:${this.port}), initialisiere Radio...`);
+            console.log(`[+] Gateway '${this.id}' TCP connected (${this.ip}:${this.port}), initialising radio...`);
 
             try {
                 await this._configureRadio(
@@ -73,16 +73,16 @@ class GatewayNode {
                     this.hub.config.features.idleProfile
                 );
                 console.log(
-                    `[+] Gateway '${this.id}' initial auf TX=${this.hub.config.features.idleTxChannel} / RX=${this.hub.config.features.idleRxChannel} gesetzt`
+                    `[+] Gateway '${this.id}' initialised TX=${this.hub.config.features.idleTxChannel} / RX=${this.hub.config.features.idleRxChannel}`
                 );
             } catch (err) {
-                console.error(`[!] Initial-TUNE für Gateway '${this.id}' fehlgeschlagen: ${err.message}`);
+                console.error(`[!] Initial TUNE for gateway '${this.id}' failed: ${err.message}`);
             }
 
             this._setConnectionState(true, 'tcp-connected');
             this._startHeartbeatMonitor();
 
-            console.log(`[+] Gateway '${this.id}' ist bereit.`);
+            console.log(`[+] Gateway '${this.id}' ready.`);
 
             this.getVersion().catch(() => { });
         });
@@ -98,11 +98,11 @@ class GatewayNode {
         });
 
         this.rl.on('error', (err) => {
-            console.error(`[!] Readline Fehler Gateway '${this.id}': ${err.message}`);
+            console.error(`[!] Readline error for gateway '${this.id}': ${err.message}`);
         });
 
         this.client.on('error', (err) => {
-            console.error(`[!] TCP Fehler Gateway '${this.id}': ${err.message}`);
+            console.error(`[!] TCP error for gateway '${this.id}': ${err.message}`);
         });
 
         this.client.on('close', () => {
@@ -112,11 +112,11 @@ class GatewayNode {
             this._setConnectionState(false, 'tcp-closed');
 
             if (this.isDestroyed) {
-                console.log(`[!] Verbindung zu Gateway '${this.id}' getrennt (manuell entfernt).`);
+                console.log(`[!] Connection to gateway '${this.id}' closed (manually removed).`);
                 return;
             }
 
-            console.log(`[!] Verbindung zu Gateway '${this.id}' getrennt. Verbinde neu in 5s...`);
+            console.log(`[!] Connection to gateway '${this.id}' lost. Reconnecting in 5s...`);
 
             if (this.pendingHeartbeat) {
                 clearTimeout(this.pendingHeartbeat.timeout);
@@ -129,7 +129,7 @@ class GatewayNode {
                 ts: Date.now(),
             });
 
-            this._rejectPendingIo(new Error('Verbindungsabbruch'));
+            this._rejectPendingIo(new Error('Connection lost'));
 
             setTimeout(() => this._initSocket(), 5000);
         });
@@ -227,7 +227,7 @@ class GatewayNode {
             } else if (this.pendingControl) {
                 this.pendingControl.reject(err);
             } else {
-                console.warn(`[Gateway ${this.id}] Unbehandelte ERR-Nachricht: ${line}`);
+                console.warn(`[Gateway ${this.id}] Unhandled ERR message: ${line}`);
             }
 
             return;
@@ -334,7 +334,7 @@ class GatewayNode {
 
         return new Promise((resolve, reject) => {
             if (!this.isConnected) {
-                return reject(new Error(`Gateway '${this.id}' ist offline.`));
+                return reject(new Error(`Gateway '${this.id}' is offline.`));
             }
 
             if (typeof match !== 'function') {
@@ -343,7 +343,7 @@ class GatewayNode {
             }
 
             if (this.pendingControl) {
-                return reject(new Error(`Control-Befehl läuft bereits auf Gateway '${this.id}'.`));
+                return reject(new Error(`Control command already in progress on gateway '${this.id}'.`));
             }
 
             const timeout = setTimeout(() => {
@@ -412,9 +412,9 @@ class GatewayNode {
     _configureRadio(txChannel, rxChannel = 0, txProfile = 'short') {
         return new Promise((resolve, reject) => {
             if (!this.isConnected && this.client) {
-                return reject(new Error(`Gateway '${this.id}' ist offline.`));
+                return reject(new Error(`Gateway '${this.id}' is offline.`));
             }
-            if (this.pendingTune) return reject(new Error('TUNE läuft bereits.'));
+            if (this.pendingTune) return reject(new Error('TUNE already in progress.'));
 
             const timeout = setTimeout(() => {
                 if (this.pendingTune) {
@@ -444,9 +444,9 @@ class GatewayNode {
     _txDirect(hexString, txTimeoutMs = 1500) {
         return new Promise((resolve, reject) => {
             if (!this.isConnected || !this.client) {
-                return reject(new Error(`Gateway '${this.id}' ist offline.`));
+                return reject(new Error(`Gateway '${this.id}' is offline.`));
             }
-            if (this.pendingTx) return reject(new Error('TX läuft bereits.'));
+            if (this.pendingTx) return reject(new Error('TX already in progress.'));
 
             const timeout = setTimeout(() => {
                 if (this.pendingTx) {
@@ -653,7 +653,7 @@ class GatewayNode {
                 try {
                     await this._retuneToIdle();
                 } catch (retuneErr) {
-                    console.error(`[Gateway ${this.id}] Retune nach Action fehlgeschlagen: ${retuneErr.message}`);
+                    console.error(`[Gateway ${this.id}] Retune after action failed: ${retuneErr.message}`);
                 }
             }
         }, {
@@ -726,7 +726,7 @@ class GatewayNode {
                         */
                     }
                 } catch (retuneErr) {
-                    console.error(`[Gateway ${this.id}] Safety-Net Retune fehlgeschlagen: ${retuneErr.message}`);
+                    console.error(`[Gateway ${this.id}] Safety-net retune failed: ${retuneErr.message}`);
                 }
             }
         }, {
@@ -756,7 +756,7 @@ class GatewayNode {
 
         this.heartbeatInterval = setInterval(() => {
             this._checkHeartbeat().catch(err => {
-                console.error(`[Gateway ${this.id}] Heartbeat-Fehler: ${err.message}`);
+                console.error(`[Gateway ${this.id}] Heartbeat error: ${err.message}`);
             });
         }, 30000);
     }
@@ -780,24 +780,24 @@ class GatewayNode {
             this.hub.config.features.idleProfile
         )) {
             console.warn(
-                `[Gateway ${this.id}] ⚠️ Heartbeat: Gateway idle aber auf falschem Kanal ` +
-                `(TX=${this.currentRadio.txChannel}/RX=${this.currentRadio.rxChannel}/${this.currentRadio.txProfile}) -> Retune auf idle`
+                `[Gateway ${this.id}] ⚠️ Heartbeat: gateway idle but on wrong channel ` +
+                `(TX=${this.currentRadio.txChannel}/RX=${this.currentRadio.rxChannel}/${this.currentRadio.txProfile}) -> retuning to idle`
             );
             try {
                 await this._retuneToIdle();
             } catch (err) {
-                console.error(`[Gateway ${this.id}] Heartbeat Idle-Retune fehlgeschlagen: ${err.message}`);
+                console.error(`[Gateway ${this.id}] Heartbeat idle-retune failed: ${err.message}`);
             }
         }
 
         const idleMs = Date.now() - this.lastSeenAt;
         if (idleMs < 30000) return;
 
-        console.log(`[Gateway ${this.id}] Seit ${idleMs}ms keine Daten empfangen -> Heartbeat via VERSION`);
+        console.log(`[Gateway ${this.id}] No data received for ${idleMs}ms -> heartbeat via VERSION`);
 
         return new Promise((resolve) => {
             const timeout = setTimeout(() => {
-                console.warn(`[Gateway ${this.id}] Heartbeat Timeout -> Socket wird getrennt`);
+                console.warn(`[Gateway ${this.id}] Heartbeat timeout -> disconnecting socket`);
                 this.pendingHeartbeat = null;
 
                 try {

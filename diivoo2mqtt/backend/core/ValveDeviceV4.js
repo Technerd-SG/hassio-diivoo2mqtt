@@ -128,7 +128,7 @@ class ValveDevice extends EventEmitter {
 
             const timeout = setTimeout(() => {
                 cleanup();
-                reject(new Error(`Timeout: Keine Antwort (0xA1 oder 0x02) vom Gerät für Aktion ${actionText}`));
+                reject(new Error(`Timeout: No response (0xA1 or 0x02) from device for action ${actionText}`));
             }, timeoutMs);
 
             this.pendingRequests.set(seq, {
@@ -204,7 +204,7 @@ class ValveDevice extends EventEmitter {
         this.recentRxPackets.set(packetKey, now);
 
         console.log(
-            `\n[Device ${this.valveId}] Verarbeite CMD ${utils.toHex(cmd)} (Seq: ${utils.toHex(seq)}) via ${gatewayId} (RSSI: ${rssi}dBm)`
+            `\n[Device ${this.valveId}] Processing CMD ${utils.toHex(cmd)} (Seq: ${utils.toHex(seq)}) via ${gatewayId} (RSSI: ${rssi}dBm)`
         );
 
         switch (cmd) {
@@ -219,28 +219,28 @@ class ValveDevice extends EventEmitter {
                 this.handleEventReport(seq, payload);
                 break;
             case 0x05:
-                console.log(`[Device ${this.valveId}] Parameter-Anfrage erhalten.`);
+                console.log(`[Device ${this.valveId}] Parameter request received.`);
                 this.handleParameterRequest(seq, payload);
                 break;
             case 0x06:
-                console.log(`[Device ${this.valveId}] Zeitplan-Anfrage erhalten.`);
+                console.log(`[Device ${this.valveId}] Schedule request received.`);
                 this.handleScheduleRequest(seq, payload);
                 break;
             case 0xA0:
-                console.log(`[Device ${this.valveId}] Einfaches ACK (0xA0) empfangen`);
+                console.log(`[Device ${this.valveId}] Simple ACK (0xA0) received`);
                 break;
             case 0xA1:
                 this.handleActionAck(seq, payload, gatewayId);
                 break;
             default:
-                console.log(`[Device ${this.valveId}] Ignoriere CMD ${utils.toHex(cmd)}`);
+                console.log(`[Device ${this.valveId}] Ignoring CMD ${utils.toHex(cmd)}`);
                 break;
         }
     }
 
     handleActionAck(seq, payload, gatewayId = null) {
         if (!payload || payload.length < 13) {
-            console.log(`[Device ${this.valveId}] Action-ACK (0xA1) zu kurz.`);
+            console.log(`[Device ${this.valveId}] Action-ACK (0xA1) too short.`);
             return;
         }
 
@@ -252,7 +252,7 @@ class ValveDevice extends EventEmitter {
         const targetSeconds = utils.decodeLittleEndianFromArray(payload, 11, 2);
 
         console.log(
-            `[Device ${this.valveId}] ✅ ACTION-ACK (0xA1) | Status: ${state.stateText} | Restzeit: ${remainingSeconds}s`
+            `[Device ${this.valveId}] ✅ ACTION-ACK (0xA1) | Status: ${state.stateText} | Remaining: ${remainingSeconds}s`
         );
 
         const pending = this.pendingRequests.get(seq);
@@ -284,7 +284,7 @@ class ValveDevice extends EventEmitter {
 
         // WICHTIG: Das Ventil erwartet ein finales 0x82 ACK vom Hub zurück!
         this.sendPostActionAck(gatewayId).catch(err => {
-            console.error(`[Device ${this.valveId}] Folge-ACK 0x82 nach Aktion fehlgeschlagen: ${err.message}`);
+            console.error(`[Device ${this.valveId}] Follow-up ACK 0x82 after action failed: ${err.message}`);
         });
     }
 
@@ -293,7 +293,7 @@ class ValveDevice extends EventEmitter {
         const joinInfo = utils.parseJoinPacket(payload);
 
         if (!joinInfo) {
-            console.log(`[Device ${this.valveId}] Join-Request zu kurz oder ungültig.`);
+            console.log(`[Device ${this.valveId}] Join request too short or invalid.`);
             return;
         }
 
@@ -311,18 +311,18 @@ class ValveDevice extends EventEmitter {
         }
 
         console.log(
-            `[Device ${this.valveId}] Hello/Join erhalten | Modell: ${this.model} (FW: v${this.firmwareVersion}) | ` +
-            `Kanal-Vorschlag=${joinInfo.suggestedChannelCode} (Kanal ${Math.max(0, joinInfo.suggestedChannelCode - 1)})`
+            `[Device ${this.valveId}] Hello/Join received | Model: ${this.model} (FW: v${this.firmwareVersion}) | ` +
+            `Channel proposal=${joinInfo.suggestedChannelCode} (channel ${Math.max(0, joinInfo.suggestedChannelCode - 1)})`
         );
 
         this.processJoinRouting(seq, joinInfo.suggestedChannelCode).catch(err => {
-            console.error(`[Device ${this.valveId}] Join-Routing fehlgeschlagen: ${err.message}`);
+            console.error(`[Device ${this.valveId}] Join routing failed: ${err.message}`);
         });
     }
 
     handleStatusReport(seq, payload) {
         if (!payload || payload.length < 15) {
-            console.log(`[Device ${this.valveId}] Status-Report zu kurz.`);
+            console.log(`[Device ${this.valveId}] Status report too short.`);
             return;
         }
 
@@ -349,9 +349,9 @@ class ValveDevice extends EventEmitter {
         const runtimeSeconds = utils.decodeLittleEndianFromArray(payload, 13, 2);
 
         console.log(
-            `[Device ${this.valveId}] Status | Kanal-Code=${channelCode} (Kanal ${actualChannel}) | Ventil=${rawValveIndex}` +
+            `[Device ${this.valveId}] Status | Channel code=${channelCode} (channel ${actualChannel}) | Valve=${rawValveIndex}` +
             `${valveIndex !== null && valveIndex !== rawValveIndex ? ` -> mapped=${valveIndex}` : ''} | ` +
-            `${state.stateText} | Restzeit=${remainingSeconds}s | Laufzeit=${runtimeSeconds}s | Batterie=${meta.batteryText}`
+            `${state.stateText} | Remaining=${remainingSeconds}s | Runtime=${runtimeSeconds}s | Battery=${meta.batteryText}`
         );
 
         if (valveIndex !== null) {
@@ -369,7 +369,7 @@ class ValveDevice extends EventEmitter {
             this.channels[valveIndex].sourceText = state.sourceText;
             this.channels[valveIndex].lastSyncTime = now;
         } else {
-            console.warn(`[Device ${this.valveId}] Status-Report mit unbekanntem Ventil-Index ${rawValveIndex}`);
+            console.warn(`[Device ${this.valveId}] Status report with unknown valve index ${rawValveIndex}`);
         }
 
         // Promises für laufende Aktionen (z.B. user klickt "AN" im CLI) auflösen
@@ -394,16 +394,16 @@ class ValveDevice extends EventEmitter {
 
         // 3. WICHTIG: Dynamische Time-Sync Antwort basierend auf dem echten Event-Code!
         if (meta.eventCode === 6) {
-            console.log(`[Device ${this.valveId}] ⏱️ Ventil fordert Zeit-Synchronisation an!`);
-            this.sendTimeSyncReply(seq).catch(err => console.warn(`[Device ${this.valveId}] Zeit-Sync Sende-Fehler: ${err.message}`));
+            console.log(`[Device ${this.valveId}] ⏱️ Valve requesting time sync!`);
+            this.sendTimeSyncReply(seq).catch(err => console.warn(`[Device ${this.valveId}] Time sync send error: ${err.message}`));
         } else {
-            this.sendShortAck(seq).catch(err => console.warn(`[Device ${this.valveId}] ACK Sende-Fehler: ${err.message}`)); // Nutzt unsere neue sendShortAck Methode
+            this.sendShortAck(seq).catch(err => console.warn(`[Device ${this.valveId}] ACK send error: ${err.message}`)); // Nutzt unsere neue sendShortAck Methode
         }
     }
 
     handleEventReport(seq, payload) {
         if (!payload || payload.length < 14) {
-            console.log(`[Device ${this.valveId}] Event-Report (0x04) zu kurz.`);
+            console.log(`[Device ${this.valveId}] Event report (0x04) too short.`);
             return;
         }
 
@@ -424,12 +424,12 @@ class ValveDevice extends EventEmitter {
         const elapsedSeconds = utils.decodeLittleEndianFromArray(payload, 12, 2);
 
         console.log(
-            `\n[Device ${this.valveId}] ⚡ EREIGNISBERICHT (0x04) | Ventil: ${valveIndex} | Event-Code: ${utils.toHex(eventCode)}`
+            `\n[Device ${this.valveId}] ⚡ EVENT REPORT (0x04) | Valve: ${valveIndex} | Event code: ${utils.toHex(eventCode)}`
         );
-        console.log(`    ├─ Zeitpunkt   : ${eventDate ? eventDate.text : 'Ungültig'}`);
-        console.log(`    ├─ Letzter Status: ${state.stateText} (Quelle: ${state.sourceText})`);
-        console.log(`    ├─ Laufzeit    : ${elapsedSeconds} Sekunden`);
-        console.log(`    └─ Verbrauch   : ${waterConsumption} ml\n`);
+        console.log(`    ├─ Timestamp  : ${eventDate ? eventDate.text : 'Invalid'}`);
+        console.log(`    ├─ Last state : ${state.stateText} (source: ${state.sourceText})`);
+        console.log(`    ├─ Runtime    : ${elapsedSeconds}s`);
+        console.log(`    └─ Consumption: ${waterConsumption} ml\n`);
 
         if (valveIndex !== null && this.channels[valveIndex]) {
             // Historien-Daten im Kanal speichern
@@ -444,11 +444,10 @@ class ValveDevice extends EventEmitter {
                 this.channels[valveIndex].remaining = 0;
             }
         } else {
-            console.warn(`[Device ${this.valveId}] Event für unbekanntes Ventil: ${rawValveIndex}`);
+            console.warn(`[Device ${this.valveId}] Event for unknown valve: ${rawValveIndex}`);
         }
 
-        // ACK senden (0x84)
-        this.sendEventAck(seq).catch(err => console.warn(`[Device ${this.valveId}] Event-ACK Sende-Fehler: ${err.message}`));
+        this.sendEventAck(seq).catch(err => console.warn(`[Device ${this.valveId}] Event ACK send error: ${err.message}`));
     }
 
     handleParameterRequest(seq, payload) {
@@ -456,8 +455,8 @@ class ValveDevice extends EventEmitter {
         // könnten wir das hier auslesen. Wenn nicht, senden wir Standardmäßig für Kanal 1.
         const channelIndex = payload.length > 1 ? this.normalizeValveIndex(payload[1]) || 1 : 1;
 
-        console.log(`\n[Device ${this.valveId}] ⚙️ PARAMETER-ANFRAGE (0x05) für Kanal ${channelIndex}`);
-        this.sendParameterResponse(seq, channelIndex)?.catch(err => console.warn(`[Device ${this.valveId}] Parameter-Antwort Sende-Fehler: ${err.message}`));
+        console.log(`\n[Device ${this.valveId}] ⚙️ PARAMETER REQUEST (0x05) for channel ${channelIndex}`);
+        this.sendParameterResponse(seq, channelIndex)?.catch(err => console.warn(`[Device ${this.valveId}] Parameter response send error: ${err.message}`));
     }
 
     handleScheduleRequest(seq, payload) {
@@ -475,7 +474,7 @@ class ValveDevice extends EventEmitter {
         // Falls keine Pläne da sind oder Seite außerhalb des Bereichs
         if (schedules.length === 0 || pageRequested >= totalPages) {
             console.log("SEND EMTY WATERING SCHEDULE")
-            return this.sendEmptyPlanResponse(seq).catch(err => console.warn(`[Device ${this.valveId}] Leere Plan-Antwort Fehler: ${err.message}`));
+            return this.sendEmptyPlanResponse(seq).catch(err => console.warn(`[Device ${this.valveId}] Empty schedule response error: ${err.message}`));
         }
 
         // Die Pläne für die aktuelle Seite extrahieren
@@ -493,7 +492,7 @@ class ValveDevice extends EventEmitter {
             outPayload.push(...utils.encodePlanBlock(normalizedPlan));
         });
 
-        console.log(`[Device ${this.valveId}] Sende Seite ${pageRequested}/${totalPages - 1}. Noch ${pagesRemaining} Pakete folgend.`);
+        console.log(`[Device ${this.valveId}] Sending page ${pageRequested}/${totalPages - 1}. ${pagesRemaining} packet(s) following.`);
 
         console.log('Schedules raw:', schedules);
         console.log('Current plans:', currentPlans);
@@ -506,7 +505,7 @@ class ValveDevice extends EventEmitter {
             `Plans: Pg ${pageRequested}, Rem ${pagesRemaining}`,
             this.getDownlinkChannel(),
             this.getDefaultListenChannel()
-        ).catch(err => console.warn(`[Device ${this.valveId}] Plan-Antwort Sende-Fehler: ${err.message}`));
+        ).catch(err => console.warn(`[Device ${this.valveId}] Schedule response send error: ${err.message}`));
     }
 
     _uniqueTxChannels(channels) {
@@ -530,7 +529,7 @@ class ValveDevice extends EventEmitter {
     processJoinRouting(seq, proposedChannelCode) {
         if (!this.isBound) {
             if (!this.isPairingModeEnabled()) {
-                console.log(`[Device ${this.valveId}] Gerät unbekannt, Gateway nicht im Pairing-Modus -> keine Antwort.`);
+                console.log(`[Device ${this.valveId}] Device unknown, gateway not in pairing mode -> no response.`);
                 return Promise.resolve();
             }
 
@@ -546,8 +545,8 @@ class ValveDevice extends EventEmitter {
             this.state = 'PAIRING';
 
             console.log(
-                `[Device ${this.valveId}] Neues Gerät wird angelernt | ` +
-                `Adresse=${this.deviceAddress}, Kanal-Code=${this.channelCode}, Kanal=${this.channelCode - 1}`
+                `[Device ${this.valveId}] Pairing new device | ` +
+                `Address=${this.deviceAddress}, channel code=${this.channelCode}, channel=${this.channelCode - 1}`
             );
 
             // 1) auf Kanal 4 für echtes Pairing
@@ -560,7 +559,7 @@ class ValveDevice extends EventEmitter {
             }, [
                 4,
                 this.getDownlinkChannel()
-            ]).catch(err => console.warn(`[Device ${this.valveId}] Join-Response Sende-Fehler: ${err.message}`));
+            ]).catch(err => console.warn(`[Device ${this.valveId}] Join response send error: ${err.message}`));
         }
 
         if (!Number.isInteger(this.deviceAddress)) {
@@ -579,13 +578,13 @@ class ValveDevice extends EventEmitter {
 
         if (needsRestore) {
             console.log(
-                `[Device ${this.valveId}] Bekanntes Gerät mit anderem Kanal-Vorschlag | ` +
-                `Vorschlag=${proposedChannelCode}, erwartet=${this.channelCode} -> redundante Restore-Antwort`
+                `[Device ${this.valveId}] Known device with different channel proposal | ` +
+                `Proposed=${proposedChannelCode}, expected=${this.channelCode} -> redundant restore response`
             );
         } else {
             console.log(
-                `[Device ${this.valveId}] Bekanntes Gerät rejoin | ` +
-                `Kanal-Vorschlag=${proposedChannelCode} -> redundante Bestätigung`
+                `[Device ${this.valveId}] Known device rejoin | ` +
+                `channel proposal=${proposedChannelCode} -> redundant confirmation`
             );
         }
 
@@ -738,7 +737,7 @@ class ValveDevice extends EventEmitter {
         // Hole die echten Einstellungen aus dem Speicher des Hubs
         const ch = this.channels[channelIndex];
         if (!ch) {
-            console.error(`[!] Parameter-Antwort fehlgeschlagen: Kanal ${channelIndex} existiert nicht.`);
+            console.error(`[!] Parameter response failed: channel ${channelIndex} does not exist.`);
             return;
         }
 
@@ -764,7 +763,7 @@ class ValveDevice extends EventEmitter {
             0x00, 0x00                      // [13..14] Reserviert
         ];
 
-        console.log(`    └─ Sende Parameter (0x85) | Dauer: ${dur}s | IntON: ${intOn}s | IntOFF: ${intOff}s | RainDelay: ${rainDelayDate ? rainDelayDate.toLocaleString() : 'AUS'}`);
+        console.log(`    └─ Sending parameters (0x85) | Duration: ${dur}s | IntON: ${intOn}s | IntOFF: ${intOff}s | RainDelay: ${rainDelayDate ? rainDelayDate.toLocaleString() : 'OFF'}`);
 
         return this.sendHubPacket(
             seq,
@@ -778,7 +777,7 @@ class ValveDevice extends EventEmitter {
 
     sendEmptyPlanResponse(seq) {
         const payload = [0x00];
-        return this.sendHubPacket(seq, 0x86, payload, 'Leerer Plan (0x86)', this.getDownlinkChannel(), this.getDefaultListenChannel());
+        return this.sendHubPacket(seq, 0x86, payload, 'Empty schedule (0x86)', this.getDownlinkChannel(), this.getDefaultListenChannel());
     }
 
     async sendRefreshTrigger(correlationToken = null) {
@@ -787,7 +786,7 @@ class ValveDevice extends EventEmitter {
         const payload = [token & 0xFF, 0x01]; // Changed from 0x00 to 0x01 to match sendPingTrigger
 
         console.log(
-            `[Device ${this.valveId}] 🔔 Sende Wake/Refresh-Trigger (0x20) | token=${utils.toHex(token)}`
+            `[Device ${this.valveId}] 🔔 Sending wake/refresh trigger (0x20) | token=${utils.toHex(token)}`
         );
 
         const result = await this.sendHubPacket(
@@ -808,12 +807,12 @@ class ValveDevice extends EventEmitter {
             this.trys_refresh_trigger = 0;
             for (const inbound of result) {
                 console.log(
-                    `[Device ${this.valveId}] ↩ Refresh-Folgepaket | cmd=${utils.toHex(inbound.cmd)} seq=${utils.toHex(inbound.seq)}`
+                    `[Device ${this.valveId}] ↩ Refresh follow-up packet | cmd=${utils.toHex(inbound.cmd)} seq=${utils.toHex(inbound.seq)}`
                 );
             }
         } else {
             console.log(
-                `[Device ${this.valveId}] ↩ Keine Folgepakete nach Refresh-Trigger empfangen`
+                `[Device ${this.valveId}] ↩ No follow-up packets after refresh trigger`
             );
 
             if (this.trys_refresh_trigger < 4) {
@@ -839,7 +838,7 @@ class ValveDevice extends EventEmitter {
 
             if (attempt === 0) {
                 console.log(
-                    `[Device ${this.valveId}] 📡 Sende gezielten Ping-Trigger (0x20) | token=${utils.toHex(token)}`
+                    `[Device ${this.valveId}] 📡 Sending targeted ping trigger (0x20) | token=${utils.toHex(token)}`
                 );
             } else {
                 console.log(
@@ -864,14 +863,14 @@ class ValveDevice extends EventEmitter {
             if (Array.isArray(result) && result.length > 0) {
                 for (const inbound of result) {
                     console.log(
-                        `[Device ${this.valveId}] ↩ Ping-Folgepaket | cmd=${utils.toHex(inbound.cmd)} seq=${utils.toHex(inbound.seq)}`
+                        `[Device ${this.valveId}] ↩ Ping follow-up packet | cmd=${utils.toHex(inbound.cmd)} seq=${utils.toHex(inbound.seq)}`
                     );
                 }
                 return result;
             }
 
             console.log(
-                `[Device ${this.valveId}] ↩ Keine Folgepakete nach Ping-Trigger empfangen`
+                `[Device ${this.valveId}] ↩ No follow-up packets after ping trigger`
             );
         }
 
@@ -881,18 +880,18 @@ class ValveDevice extends EventEmitter {
     async executeWakeUpPing(attempts = 5, intervalMs = 1000) {
         if (!this.isBound || !Number.isInteger(this.deviceAddress)) {
             console.log(
-                `[Device ${this.valveId}] Überspringe Startup-Ping, da nicht vollständig angelernt.`
+                `[Device ${this.valveId}] Skipping startup ping, device not fully paired.`
             );
             return false;
         }
 
         console.log(
-            `[Device ${this.valveId}] 🚀 Starte gezielten Wake-Up Ping (0x20)...`
+            `[Device ${this.valveId}] 🚀 Starting targeted wake-up ping (0x20)...`
         );
 
         for (let i = 1; i <= attempts; i++) {
             console.log(
-                `[Device ${this.valveId}] Wake-Up Ping Versuch ${i}/${attempts}`
+                `[Device ${this.valveId}] Wake-up ping attempt ${i}/${attempts}`
             );
 
             try {
@@ -902,7 +901,7 @@ class ValveDevice extends EventEmitter {
                     followUps = await this.sendPingTrigger(0x04, 1);
                 } else {
                     // Fallback auf Legacy Broadcast Ping (0x82) wie im alten Code
-                    console.log(`[Device ${this.valveId}] 📡 Fallback auf Legacy TimeSync-Ping (0x82)`);
+                    console.log(`[Device ${this.valveId}] 📡 Falling back to legacy TimeSync ping (0x82)`);
                     const payload = [0x0F, 0xFF, 0x26, 0x10, 0x01, 0x07, 0x02];
                     followUps = await this.sendHubPacket(
                         this.nextCommandSeq(),
@@ -922,13 +921,13 @@ class ValveDevice extends EventEmitter {
 
                 if (Array.isArray(followUps) && followUps.length > 0) {
                     console.log(
-                        `[Device ${this.valveId}] ✅ Erfolgreich aufgeweckt! Antwort erhalten.`
+                        `[Device ${this.valveId}] ✅ Successfully woken up! Response received.`
                     );
                     return true;
                 }
             } catch (err) {
                 console.warn(
-                    `[Device ${this.valveId}] Wake-Up Ping Fehler: ${err.message}`
+                    `[Device ${this.valveId}] Wake-up ping error: ${err.message}`
                 );
             }
 
@@ -938,14 +937,14 @@ class ValveDevice extends EventEmitter {
         }
 
         console.log(
-            `[Device ${this.valveId}] ❌ Ventil hat nach ${attempts} Wake-Up Pings nicht geantwortet.`
+            `[Device ${this.valveId}] ❌ Valve did not respond after ${attempts} wake-up ping(s).`
         );
         return false;
     }
 
     sendTimeSync(date = new Date()) {
         if (!this.isBound || !Number.isInteger(this.channelCode)) {
-            console.log(`[Device ${this.valveId}] Kein Time-Sync: Gerät ist nicht vollständig gebunden.`);
+            console.log(`[Device ${this.valveId}] No time sync: device is not fully bound.`);
             return;
         }
 
@@ -1026,7 +1025,7 @@ class ValveDevice extends EventEmitter {
 
         if (packetBytes.length > 32) {
             return Promise.reject(
-                new Error(`Paket zu lang für Funkframe: ${packetBytes.length} Bytes (max 32)`)
+                new Error(`Packet too long for radio frame: ${packetBytes.length} bytes (max 32)`)
             );
         }
 
@@ -1085,7 +1084,7 @@ class ValveDevice extends EventEmitter {
             return Promise.resolve();
         }
 
-        return Promise.reject(new Error('Keine gültige Sende-Funktion gefunden!'));
+        return Promise.reject(new Error('No valid send function found!'));
     }
 
     isPairingModeEnabled() {
@@ -1172,10 +1171,10 @@ class ValveDevice extends EventEmitter {
         }
 
         let batteryPercent = 0;
-        if (this.lastBatteryText.includes('4 Balken')) batteryPercent = 100;
-        else if (this.lastBatteryText.includes('3 Balken')) batteryPercent = 75;
-        else if (this.lastBatteryText.includes('2 Balken')) batteryPercent = 50;
-        else if (this.lastBatteryText.includes('1 Balken')) batteryPercent = 25;
+        if (this.lastBatteryText.includes('4 bar')) batteryPercent = 100;
+        else if (this.lastBatteryText.includes('3 bar')) batteryPercent = 75;
+        else if (this.lastBatteryText.includes('2 bar')) batteryPercent = 50;
+        else if (this.lastBatteryText.includes('1 bar')) batteryPercent = 25;
 
         return {
             valveId: this.valveId,

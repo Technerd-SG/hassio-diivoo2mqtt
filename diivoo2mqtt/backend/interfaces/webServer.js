@@ -40,7 +40,7 @@ class WebServer {
             if (!fs.existsSync(filePath)) {
                 return res.status(404).json({
                     ok: false,
-                    error: `OTA-Datei nicht gefunden: ${filename}`
+                    error: `OTA file not found: ${filename}`
                 });
             }
 
@@ -66,13 +66,13 @@ class WebServer {
 
             const deviceLogs = logs.filter(l => l.valveId.toString() === valveId);
             if (deviceLogs.length === 0) {
-                return res.status(404).json({ error: 'Kein Join-Log für dieses Gerät gefunden.' });
+                return res.status(404).json({ error: 'No join log found for this device.' });
             }
 
             // Erstelle einen Download-String mit allen relevanten Informationen
             const downloadContent = {
                 valveId: valveId,
-                note: 'Dieses Join-Log wurde automatisch generiert. Es enthält alle aufgezeichneten Pakete für dieses unbekannte Gerät.',
+                note: 'This join log was automatically generated. It contains all recorded packets for this unknown device.',
                 packets: deviceLogs.map(logEntry => ({
                     timestamp: logEntry.timestamp,
                     gatewayId: logEntry.gatewayId,
@@ -106,7 +106,7 @@ class WebServer {
         };
 
         this.io.on('connection', (socket) => {
-            console.log('[Web] Neuer Client verbunden');
+            console.log('[Web] New client connected');
 
             // Initialen Zustand senden
             const allStates = Array.from(this.hub.devices.values()).map((device) => device.getLiveState());
@@ -196,7 +196,7 @@ class WebServer {
                     const port = process.env.WEB_PORT || 8099;
 
                     this.hub.otaManager.triggerUpdate(gatewayId, addonIp, port).catch(err => {
-                        console.error(`[Web] OTA Fehler: ${err.message}`);
+                        console.error(`[Web] OTA error: ${err.message}`);
                     });
                 }
             });
@@ -245,7 +245,7 @@ class WebServer {
                         ok: false,
                         valveId,
                         channelId,
-                        error: 'Gerät nicht gefunden'
+                        error: 'Device not found'
                     });
                 }
 
@@ -258,7 +258,7 @@ class WebServer {
                     } else if (state === 'OFF') {
                         result = await device.valve(Number(channelId)).off();
                     } else {
-                        throw new Error('Ungültiger Schaltzustand');
+                        throw new Error('Invalid valve state');
                     }
 
                     socket.emit('commandResult', {
@@ -286,12 +286,12 @@ class WebServer {
                         ok: false,
                         valveId,
                         channelId,
-                        error: 'Gerät nicht gefunden'
+                        error: 'Device not found'
                     });
                 }
 
                 try {
-                    console.log('[Web] saveChannelConfig empfangen', {
+                    console.log('[Web] saveChannelConfig received', {
                         valveId,
                         channelId,
                         config
@@ -299,7 +299,7 @@ class WebServer {
 
                     this._applyChannelConfig(device, Number(channelId), config || {});
 
-                    console.log('[Web] saveChannelConfig angewendet', {
+                    console.log('[Web] saveChannelConfig applied', {
                         valveId,
                         channelId,
                         serialized: this._serializeChannelConfig(device, Number(channelId))
@@ -307,7 +307,7 @@ class WebServer {
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'channel-config');
 
-                    console.log('[Web] saveChannelConfig refresh abgeschlossen', {
+                    console.log('[Web] saveChannelConfig refresh complete', {
                         valveId,
                         channelId
                     });
@@ -327,7 +327,7 @@ class WebServer {
                         action: 'saveChannelConfig'
                     });
                 } catch (err) {
-                    console.error('[Web] saveChannelConfig Fehler', err);
+                    console.error('[Web] saveChannelConfig error', err);
                     socket.emit('commandResult', {
                         ok: false,
                         valveId,
@@ -345,7 +345,7 @@ class WebServer {
                         ok: false,
                         valveId,
                         channelId,
-                        error: 'Gerät nicht gefunden'
+                        error: 'Device not found'
                     });
                 }
 
@@ -391,7 +391,7 @@ class WebServer {
                         ok: false,
                         valveId,
                         channelId,
-                        error: 'Gerät nicht gefunden'
+                        error: 'Device not found'
                     });
                 }
 
@@ -443,7 +443,7 @@ class WebServer {
                         ok: false,
                         valveId,
                         channelId,
-                        error: 'Gerät nicht gefunden'
+                        error: 'Device not found'
                     });
                 }
 
@@ -483,7 +483,7 @@ class WebServer {
             socket.on('gatewayOta', async ({ gatewayId, filename, url }) => {
                 try {
                     if (!gatewayId) {
-                        throw new Error('gatewayId fehlt');
+                        throw new Error('gatewayId missing');
                     }
 
                     const finalUrl = url || this._buildOtaUrl(socket, filename);
@@ -513,7 +513,7 @@ class WebServer {
                         const raw = fs.readFileSync(filePath, 'utf8');
                         ack({ ok: true, data: raw });
                     } else {
-                        ack({ ok: false, error: 'Datei existiert noch nicht' });
+                        ack({ ok: false, error: 'File does not exist yet' });
                     }
                 } catch (err) {
                     ack({ ok: false, error: err.message });
@@ -524,7 +524,7 @@ class WebServer {
                 if (typeof ack !== 'function') return;
                 try {
                     const { rawJson } = payload;
-                    if (!rawJson) throw new Error('Kein JSON übergeben');
+                    if (!rawJson) throw new Error('No JSON provided');
 
                     // Validierung: Versuche es zu parsen
                     JSON.parse(rawJson);
@@ -534,12 +534,12 @@ class WebServer {
                     
                     ack({ ok: true });
 
-                    console.log('[Web] devices.json manuell aktualisiert. Starte System neu...');
+                    console.log('[Web] devices.json updated manually. Restarting system...');
                     setTimeout(() => {
                         process.exit(0);
                     }, 500);
                 } catch (err) {
-                    console.error('[Web] Fehler beim manuellen Speichern der devices.json:', err.message);
+                    console.error('[Web] Error saving devices.json manually:', err.message);
                     ack({ ok: false, error: err.message });
                 }
             });
@@ -570,14 +570,14 @@ class WebServer {
         this.hub.on('diagnosticLogsUpdate', broadcastDiagnosticSummary);
 
         this.server.listen(config.port, '0.0.0.0', () => {
-            console.log(`[Web] Frontend läuft auf Port ${config.port}`);
+            console.log(`[Web] Frontend running on port ${config.port}`);
         });
     }
 
     _getChannelOrThrow(device, channelId) {
         const channel = device?.channels?.[channelId];
         if (!channel) {
-            throw new Error(`Kanal ${channelId} existiert nicht.`);
+            throw new Error(`Channel ${channelId} does not exist.`);
         }
 
         if (!channel.settings) {
@@ -621,7 +621,7 @@ class WebServer {
                 : Math.round(Number(config.defaultOpenMinutes) * 60);
 
             if (!Number.isFinite(seconds) || seconds < 1) {
-                throw new Error('Ungültige Standard-Öffnungszeit');
+                throw new Error('Invalid default open duration');
             }
 
             channel.settings.durationSeconds = Math.min(24 * 60 * 60, Math.round(seconds));
@@ -630,7 +630,7 @@ class WebServer {
         if (config.intervalOnSeconds != null) {
             const value = Number(config.intervalOnSeconds);
             if (!Number.isFinite(value) || value < 1 || value > 3600) {
-                throw new Error('Ungültige Brumisations-Laufzeit');
+                throw new Error('Invalid misting on-time');
             }
             channel.settings.intervalOnSeconds = Math.round(value);
         }
@@ -638,7 +638,7 @@ class WebServer {
         if (config.intervalOffSeconds != null) {
             const value = Number(config.intervalOffSeconds);
             if (!Number.isFinite(value) || value < 1 || value > 3600) {
-                throw new Error('Ungültiges Brumisations-Intervall');
+                throw new Error('Invalid misting off-interval');
             }
             channel.settings.intervalOffSeconds = Math.round(value);
         }
@@ -649,7 +649,7 @@ class WebServer {
             } else {
                 const date = new Date(config.rainStopUntil);
                 if (Number.isNaN(date.getTime())) {
-                    throw new Error('Ungültiges Datum für Regenstopp');
+                    throw new Error('Invalid date for rain stop');
                 }
                 channel.settings.rainDelayDate = date;
             }
@@ -662,16 +662,16 @@ class WebServer {
         }
 
         console.log(
-            `[Web] Sende Wake-Up Ping an Ventil ${device.valveId}, Kanal ${channelId} wegen ${reason}`
+            `[Web] Sending wake-up ping to valve ${device.valveId}, channel ${channelId} due to ${reason}`
         );
 
         // Verwende den robusten Wake-Up Ping (versucht 0x20, fällt auf Legacy 0x82 zurück)
         const success = await device.executeWakeUpPing(3, 800);
 
         if (success) {
-            console.log(`[Web] Wake-Up erfolgreich, Ventil ist wach und ruft Einstellungen ab.`);
+            console.log(`[Web] Wake-up successful, valve is awake and fetching settings.`);
         } else {
-            console.warn(`[Web] Keine direkte Antwort auf Wake-Up Ping von Ventil ${device.valveId} empfangen.`);
+            console.warn(`[Web] No direct response to wake-up ping from valve ${device.valveId}.`);
         }
     }
 
@@ -693,7 +693,7 @@ class WebServer {
                 : [];
 
             if (weekdays.length === 0) {
-                throw new Error('Für benutzerdefinierte Wiederholung muss mindestens ein Wochentag gewählt sein.');
+                throw new Error('At least one weekday must be selected for a custom repeat schedule.');
             }
         }
 
@@ -722,7 +722,7 @@ class WebServer {
         const host = (headers['x-forwarded-host'] || headers.host || '').split(',')[0].trim();
 
         if (!host) {
-            throw new Error('Host für OTA-URL konnte nicht ermittelt werden.');
+            throw new Error('Could not determine host for OTA URL.');
         }
 
         return `${proto}://${host}`;
@@ -747,7 +747,7 @@ class WebServer {
                     resolve();
                 }
             } catch (err) {
-                console.error('[Web] Fehler beim Stoppen des Webservers:', err.message);
+                console.error('[Web] Error stopping web server:', err.message);
                 resolve();
             }
         });

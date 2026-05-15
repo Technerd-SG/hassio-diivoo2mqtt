@@ -64,22 +64,22 @@ function encodeTuya32BitDate(date) {
 }
 
 function decodeChannelCode(channelCode) {
-  return { channelCode, actualChannel: channelCode > 0 ? channelCode - 1 : null, text: channelCode > 0 ? `${channelCode - 1}` : 'Ungültig' };
+  return { channelCode, actualChannel: channelCode > 0 ? channelCode - 1 : null, text: channelCode > 0 ? `${channelCode - 1}` : 'Invalid' };
 }
 
 function decodeStatusSourceByte(stateByte) {
-  const stateMap = { 0x00: 'AUS', 0x11: 'AN (lokal)', 0x12: 'MIST (lokal)', 0x20: 'AUS (Hub)', 0x21: 'AN (Hub)', 0x22: 'MIST (Hub)', 0x41: 'AN (Zeitplan)', 0x42: 'MIST (Zeitplan)' };
-  const sourceMap = { 0x0: 'keine / AUS', 0x1: 'lokal', 0x2: 'App/Hub', 0x4: 'Zeitplan' };
+  const stateMap = { 0x00: 'OFF', 0x11: 'ON (local)', 0x12: 'MIST (local)', 0x20: 'OFF (hub)', 0x21: 'ON (hub)', 0x22: 'MIST (hub)', 0x41: 'ON (schedule)', 0x42: 'MIST (schedule)' };
+  const sourceMap = { 0x0: 'none / OFF', 0x1: 'local', 0x2: 'app/hub', 0x4: 'schedule' };
   const isRunning = (stateByte & 0x03) !== 0;
   const sourceCode = (stateByte >> 4) & 0x0F;
-  return { stateByte, stateText: stateMap[stateByte] || `Unbekannt (${toHex(stateByte)})`, isRunning, sourceCode, sourceText: sourceMap[sourceCode] || `Unbekannt` };
+  return { stateByte, stateText: stateMap[stateByte] || `Unknown (${toHex(stateByte)})`, isRunning, sourceCode, sourceText: sourceMap[sourceCode] || `Unknown` };
 }
 
 function decodeStatusMetaByte(metaByte) {
   const batteryCode = (metaByte >> 3) & 0x03;
   const eventCode = metaByte & 0x07;
-  const batteryMap = { 0: 'Unbekannt (0)', 1: 'OK (4 Balken)', 2: 'Schwach (1 Balken)', 3: 'Unbekannt (3)' };
-  return { metaByte, batteryCode, batteryText: batteryMap[batteryCode] || 'Ungültig', eventCode, eventText: eventCode === 6 ? 'Zeit-Sync angefordert' : 'Normaler Report' };
+  const batteryMap = { 0: 'Unknown (0)', 1: 'OK (4 bars)', 2: 'Low (1 bar)', 3: 'Unknown (3)' };
+  return { metaByte, batteryCode, batteryText: batteryMap[batteryCode] || 'Invalid', eventCode, eventText: eventCode === 6 ? 'Time-sync requested' : 'Normal report' };
 }
 
 function decodeTimeBlock6(bytes6) {
