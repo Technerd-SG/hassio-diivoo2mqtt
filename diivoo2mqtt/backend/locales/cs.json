@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Otevřít portál",
   "gateway_clearwifi": "Gateway Vymazat WiFi",
   "gateway_refresh_version": "Gateway Aktualizovat verzi",
-  "firmware_update": "Aktualizace firmwaru"
+  "firmware_update": "Aktualizace firmwaru",
+  "valve_rain_delay": "Ventil {ch} Zpoždění deště",
+  "valve_rain_delay_until": "Ventil {ch} Zpoždění deště do"
 }

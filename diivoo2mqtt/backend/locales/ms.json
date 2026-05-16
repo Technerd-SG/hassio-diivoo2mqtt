@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Buka portal",
   "gateway_clearwifi": "Gateway Padam WiFi",
   "gateway_refresh_version": "Gateway Muat semula versi",
-  "firmware_update": "Kemas kini firmware"
+  "firmware_update": "Kemas kini firmware",
+  "valve_rain_delay": "Injap {ch} Kelewatan Hujan",
+  "valve_rain_delay_until": "Injap {ch} Kelewatan Hujan Sehingga"
 }

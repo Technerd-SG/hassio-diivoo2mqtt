@@ -9,5 +9,7 @@
   "gateway_portal": "البوابة فتح البوابة الإلكترونية",
   "gateway_clearwifi": "البوابة مسح WiFi",
   "gateway_refresh_version": "البوابة تحديث الإصدار",
-  "firmware_update": "تحديث البرنامج الثابت"
+  "firmware_update": "تحديث البرنامج الثابت",
+  "valve_rain_delay": "صمام {ch} تأخير المطر",
+  "valve_rain_delay_until": "صمام {ch} تأخير المطر حتى"
 }

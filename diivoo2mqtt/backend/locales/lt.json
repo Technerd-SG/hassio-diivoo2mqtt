@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Atidaryti portalą",
   "gateway_clearwifi": "Gateway Išvalyti WiFi",
   "gateway_refresh_version": "Gateway Atnaujinti versiją",
-  "firmware_update": "Programinės aparatinės įrangos naujinimas"
+  "firmware_update": "Programinės aparatinės įrangos naujinimas",
+  "valve_rain_delay": "Vožtuvas {ch} Lietaus atidėjimas",
+  "valve_rain_delay_until": "Vožtuvas {ch} Lietaus atidėjimas iki"
 }

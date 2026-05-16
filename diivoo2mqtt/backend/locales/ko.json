@@ -9,5 +9,7 @@
   "gateway_portal": "게이트웨이 포털 열기",
   "gateway_clearwifi": "게이트웨이 WiFi 초기화",
   "gateway_refresh_version": "게이트웨이 버전 새로고침",
-  "firmware_update": "펌웨어 업데이트"
+  "firmware_update": "펌웨어 업데이트",
+  "valve_rain_delay": "밸브 {ch} 우천 지연",
+  "valve_rain_delay_until": "밸브 {ch} 우천 지연 종료"
 }

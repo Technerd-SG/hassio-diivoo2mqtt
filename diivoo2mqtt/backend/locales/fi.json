@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Avaa portaali",
   "gateway_clearwifi": "Gateway Tyhjennä WiFi",
   "gateway_refresh_version": "Gateway Päivitä versio",
-  "firmware_update": "Laiteohjelmistopäivitys"
+  "firmware_update": "Laiteohjelmistopäivitys",
+  "valve_rain_delay": "Venttiili {ch} Sadeviive",
+  "valve_rain_delay_until": "Venttiili {ch} Sadeviive asti"
 }

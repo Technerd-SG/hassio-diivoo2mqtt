@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Άνοιγμα πύλης",
   "gateway_clearwifi": "Gateway Εκκαθάριση WiFi",
   "gateway_refresh_version": "Gateway Ανανέωση έκδοσης",
-  "firmware_update": "Ενημέρωση υλικολογισμικού"
+  "firmware_update": "Ενημέρωση υλικολογισμικού",
+  "valve_rain_delay": "Βαλβίδα {ch} Καθυστέρηση βροχής",
+  "valve_rain_delay_until": "Βαλβίδα {ch} Καθυστέρηση βροχής έως"
 }

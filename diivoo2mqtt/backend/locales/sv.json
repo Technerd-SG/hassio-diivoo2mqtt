@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Öppna portal",
   "gateway_clearwifi": "Gateway Rensa WiFi",
   "gateway_refresh_version": "Gateway Uppdatera version",
-  "firmware_update": "Firmwareuppdatering"
+  "firmware_update": "Firmwareuppdatering",
+  "valve_rain_delay": "Ventil {ch} Regnfördröjning",
+  "valve_rain_delay_until": "Ventil {ch} Regnfördröjning till"
 }

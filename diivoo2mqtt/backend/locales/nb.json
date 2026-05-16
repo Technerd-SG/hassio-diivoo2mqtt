@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Åpne portal",
   "gateway_clearwifi": "Gateway Slett WiFi",
   "gateway_refresh_version": "Gateway Oppdater versjon",
-  "firmware_update": "Fastvareoppdatering"
+  "firmware_update": "Fastvareoppdatering",
+  "valve_rain_delay": "Ventil {ch} Regnforsinkelse",
+  "valve_rain_delay_until": "Ventil {ch} Regnforsinkelse til"
 }

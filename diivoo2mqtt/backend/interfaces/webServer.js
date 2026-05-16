@@ -299,6 +299,8 @@ class WebServer {
 
                     this._applyChannelConfig(device, Number(channelId), config || {});
 
+                    device._notifyStateChange('channel-config-updated');
+
                     console.log('[Web] saveChannelConfig applied', {
                         valveId,
                         channelId,

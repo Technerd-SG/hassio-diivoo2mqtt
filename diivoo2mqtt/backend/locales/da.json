@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Åbn portal",
   "gateway_clearwifi": "Gateway Ryd WiFi",
   "gateway_refresh_version": "Gateway Opdater version",
-  "firmware_update": "Firmwareopdatering"
+  "firmware_update": "Firmwareopdatering",
+  "valve_rain_delay": "Ventil {ch} Regn forsinkelse",
+  "valve_rain_delay_until": "Ventil {ch} Regn forsinkelse til"
 }
