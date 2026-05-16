@@ -178,14 +178,15 @@
           class="theme-card grid gap-4 rounded-[28px] border p-4"
         >
           <div class="flex flex-wrap items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
-            <div>
+            <button type="button" class="text-left" @click="toggleDeviceCollapsed(device.valveId)">
               <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
-                {{ device.model || 'Irrigation device' }}
+                {{ device.model || 'Irrigation device' }} ({{ device.valveId }})
               </strong>
               <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
                 {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
+                <span class="ml-2">{{ isDeviceCollapsed(device.valveId) ? '▼ expand' : '▲ collapse' }}</span>
               </div>
-            </div>
+            </button>
 
             <div class="flex flex-wrap gap-2 max-md:w-full">
               <div
@@ -216,7 +217,7 @@
             </div>
           </div>
 
-          <div class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] max-md:grid-cols-1">
+          <div v-if="!isDeviceCollapsed(device.valveId)" class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] max-md:grid-cols-1">
             <section
               v-for="[channelId, channel] in sortedChannels(device)"
               :key="`${device.valveId}-${channelId}`"
@@ -713,6 +714,8 @@ const rawJsonContent = ref('')
 const rawJsonError = ref('')
 const isRestarting = ref(false)
 
+const collapsedDevices = ref(new Set())
+
 const planDraft = reactive({
   mode: 'normal',
   repeat: 'daily',
@@ -1179,6 +1182,20 @@ function sendValve(deviceId, channelId, action) {
     cleanup.delete(key)
     pending.value = cleanup
   }, 2200)
+}
+
+function isDeviceCollapsed(valveId) {
+  return collapsedDevices.value.has(valveId)
+}
+
+function toggleDeviceCollapsed(valveId) {
+  const next = new Set(collapsedDevices.value)
+  if (next.has(valveId)) {
+    next.delete(valveId)
+  } else {
+    next.add(valveId)
+  }
+  collapsedDevices.value = next
 }
 
 function togglePairing() {
