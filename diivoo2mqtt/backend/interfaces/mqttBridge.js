@@ -54,6 +54,7 @@ class MqttBridge {
             // Eingehende Befehle von Home Assistant
             this.client.subscribe([
                 'diivoo/+/valve/+/set',
+                'diivoo/+/ch/+/rain_delay/set',
                 'diivoo/gateway/+/led/set',
                 'diivoo/gateway/+/portal/press',
                 'diivoo/gateway/+/clearwifi/press',
@@ -255,6 +256,41 @@ class MqttBridge {
                     state_topic: stateTopic,
                     value_template: `{{ value_json.channels['${ch}'].source }}`,
                     icon: 'mdi:information-outline',
+                    entity_category: 'diagnostic',
+                    device: deviceBase
+                })
+            );
+
+            // Remove old select entity if it exists
+            this._publish(`${discoveryPrefix}/select/${valveId}_ch${ch}_rain_delay/config`, '', { retain: true });
+
+            // Rain Delay (hours, 0 = off)
+            this._publish(
+                `${discoveryPrefix}/number/${valveId}_ch${ch}_rain_delay/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_rain_delay', { ch }),
+                    unique_id: `diivoo_${valveId}_rain_delay_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].rainDelayHours }}`,
+                    command_topic: `diivoo/${valveId}/ch/${ch}/rain_delay/set`,
+                    min: 0,
+                    max: 168,
+                    step: 1,
+                    unit_of_measurement: 'h',
+                    icon: 'mdi:weather-rainy',
+                    device: deviceBase
+                })
+            );
+
+            // Rain Delay expiry sensor (shows actual end datetime or 'Off')
+            this._publish(
+                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_rain_delay_until/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_rain_delay_until', { ch }),
+                    unique_id: `diivoo_${valveId}_rain_delay_until_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].rainDelayUntil }}`,
+                    icon: 'mdi:calendar-clock',
                     entity_category: 'diagnostic',
                     device: deviceBase
                 })
@@ -619,6 +655,44 @@ class MqttBridge {
             } catch (err) {
                 console.error(`[MQTT] Valve command failed: ${err.message}`);
             }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // Rain Delay: diivoo/{valveId}/ch/{channelId}/rain_delay/set
+        // Payload: 'Off' | '24 hours' | '48 hours' | '72 hours' | '1 week'
+        // --------------------------------------------------------
+        if (parts.length === 6 && parts[0] === 'diivoo' && parts[2] === 'ch' && parts[4] === 'rain_delay' && parts[5] === 'set') {
+            const valveId = parseInt(parts[1], 10);
+            const channelId = parseInt(parts[3], 10);
+
+            const device = this.hub.devices.get(valveId);
+            if (!device) return;
+
+            const channel = device.channels?.[channelId];
+            if (!channel) return;
+
+            if (!channel.settings) {
+                channel.settings = { durationSeconds: 600, intervalOnSeconds: 10, intervalOffSeconds: 30, rainDelayDate: null };
+            }
+
+            const hours = Math.round(parseFloat(raw.trim()));
+
+            if (!Number.isFinite(hours) || hours < 0 || hours > 168) {
+                console.warn(`[MQTT] Invalid rain delay hours: ${raw}`);
+                return;
+            }
+
+            channel.settings.rainDelayDate = hours > 0 ? new Date(Date.now() + hours * 3600000) : null;
+
+            console.log(`[MQTT] Rain delay for valve ${valveId} ch${channelId}: ${hours}h`);
+
+            device._notifyStateChange('rain-delay-mqtt');
+
+            device.sendPingTrigger(null, 2, 0x03).catch(err => {
+                console.error(`[MQTT] Rain delay ping failed for valve ${valveId}: ${err.message}`);
+            });
 
             return;
         }

@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Portaal openen",
   "gateway_clearwifi": "Gateway WiFi wissen",
   "gateway_refresh_version": "Gateway Versie vernieuwen",
-  "firmware_update": "Firmware-update"
+  "firmware_update": "Firmware-update",
+  "valve_rain_delay": "Ventiel {ch} Regenuitstel",
+  "valve_rain_delay_until": "Ventiel {ch} Regenuitstel tot"
 }

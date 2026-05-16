@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Portal aç",
   "gateway_clearwifi": "Gateway WiFi temizle",
   "gateway_refresh_version": "Gateway Sürümü yenile",
-  "firmware_update": "Donanım yazılımı güncellemesi"
+  "firmware_update": "Donanım yazılımı güncellemesi",
+  "valve_rain_delay": "Vana {ch} Yağmur Gecikmesi",
+  "valve_rain_delay_until": "Vana {ch} Yağmur Gecikmesi Bitiş"
 }

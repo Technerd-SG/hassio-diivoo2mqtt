@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Odpri portal",
   "gateway_clearwifi": "Gateway Počisti WiFi",
   "gateway_refresh_version": "Gateway Posodobi različico",
-  "firmware_update": "Posodobitev vdelane programske opreme"
+  "firmware_update": "Posodobitev vdelane programske opreme",
+  "valve_rain_delay": "Ventil {ch} Zamuda dežja",
+  "valve_rain_delay_until": "Ventil {ch} Zamuda dežja do"
 }

@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway เปิดพอร์ทัล",
   "gateway_clearwifi": "Gateway ล้าง WiFi",
   "gateway_refresh_version": "Gateway รีเฟรชเวอร์ชัน",
-  "firmware_update": "อัปเดตเฟิร์มแวร์"
+  "firmware_update": "อัปเดตเฟิร์มแวร์",
+  "valve_rain_delay": "วาล์ว {ch} หน่วงเวลาฝน",
+  "valve_rain_delay_until": "วาล์ว {ch} หน่วงเวลาฝนจนถึง"
 }
