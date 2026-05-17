@@ -178,13 +178,31 @@
           class="theme-card grid gap-4 rounded-[28px] border p-4"
         >
           <div class="flex flex-wrap items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
-            <div>
-              <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
-                {{ device.model || 'Irrigation device' }}
-              </strong>
-              <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
-                {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
-              </div>
+            <div class="min-w-0 flex-1">
+              <template v-if="renamingDeviceId === device.valveId">
+                <form class="flex items-center gap-2" @submit.prevent="commitRename(device.valveId)">
+                  <input
+                    v-model="renameInput"
+                    class="theme-input rounded-xl border px-3 py-1.5 text-[18px] font-extrabold tracking-[-0.03em] w-full max-w-xs"
+                    placeholder="Device name"
+                    autofocus
+                    @keydown.esc="cancelRename"
+                  />
+                  <button type="submit" class="theme-button-primary rounded-full border px-3 py-1.5 text-[13px] font-bold">Save</button>
+                  <button type="button" class="theme-button-secondary rounded-full border px-3 py-1.5 text-[13px] font-bold" @click="cancelRename">Cancel</button>
+                </form>
+                <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
+                  ID: {{ device.valveId }} · {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
+                </div>
+              </template>
+              <template v-else>
+                <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
+                  {{ device.alias || device.model || 'Irrigation device' }}
+                </strong>
+                <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
+                  ID: {{ device.valveId }} · {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
+                </div>
+              </template>
             </div>
 
             <div class="flex flex-wrap gap-2 max-md:w-full">
@@ -205,6 +223,15 @@
               >
                 Battery {{ device.battery || 'Unknown' }}
               </div>
+
+              <button
+                v-if="renamingDeviceId !== device.valveId"
+                type="button"
+                class="theme-button-secondary inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center transition hover:-translate-y-[1px]"
+                @click="startRename(device)"
+              >
+                Rename
+              </button>
 
               <button
                 type="button"
@@ -712,6 +739,9 @@ const diagnosticLogs = ref([])
 const rawJsonContent = ref('')
 const rawJsonError = ref('')
 const isRestarting = ref(false)
+
+const renamingDeviceId = ref(null)
+const renameInput = ref('')
 
 const planDraft = reactive({
   mode: 'normal',
@@ -1404,6 +1434,22 @@ function removeDevice(valveId) {
   if (confirm(`Do you really want to remove the device with ID ${valveId}? You might need to re-pair it to use it again.`)) {
     socket.emit('removeDevice', { valveId })
   }
+}
+
+function startRename(device) {
+  renamingDeviceId.value = device.valveId
+  renameInput.value = device.alias || ''
+}
+
+function cancelRename() {
+  renamingDeviceId.value = null
+  renameInput.value = ''
+}
+
+function commitRename(valveId) {
+  socket.emit('renameDevice', { valveId, alias: renameInput.value })
+  renamingDeviceId.value = null
+  renameInput.value = ''
 }
 
 function formatTimestamp(timestamp) {

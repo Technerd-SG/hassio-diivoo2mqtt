@@ -74,6 +74,12 @@ class MqttBridge {
 
         // Ventil-Updates
         this.hub.on('deviceUpdate', this.publishDeviceState.bind(this));
+        this.hub.on('deviceRenamed', ({ valveId }) => {
+            const device = this.hub.devices.get(valveId);
+            if (!device) return;
+            this.discoveredValves.delete(valveId);
+            this.publishAutoDiscovery(device.getLiveState());
+        });
 
         // Gateway-Updates
         this.hub.on('gatewayButton', this.handleGatewayButton.bind(this));
@@ -177,7 +183,7 @@ class MqttBridge {
 
         const deviceBase = {
             identifiers: [`diivoo_${valveId}`],
-            name: `Diivoo ${model} (${valveId})`,
+            name: deviceLiveState.alias || `Diivoo ${model} (${valveId})`,
             manufacturer: 'Diivoo Custom Hub',
             model: model
         };

@@ -231,11 +231,21 @@ class WebServer {
             socket.on('removeDevice', ({ valveId }) => {
                 if (this.hub && typeof this.hub.removeDevice === 'function') {
                     this.hub.removeDevice(valveId);
-                    
+
                     // Broadcast updated list
                     const allStates = Array.from(this.hub.devices.values()).map((device) => device.getLiveState());
                     this.io.emit('initialState', allStates);
                 }
+            });
+
+            socket.on('renameDevice', ({ valveId, alias }) => {
+                if (!this.hub || typeof this.hub.renameDevice !== 'function') return;
+                const ok = this.hub.renameDevice(valveId, alias);
+                if (ok) {
+                    const allStates = Array.from(this.hub.devices.values()).map((device) => device.getLiveState());
+                    this.io.emit('initialState', allStates);
+                }
+                socket.emit('commandResult', { ok, valveId, action: 'renameDevice' });
             });
 
             socket.on('setValve', async ({ valveId, channelId, state, duration }) => {

@@ -49,6 +49,7 @@ class ValveDevice extends EventEmitter {
 
         // Metadaten
         this.model = options.model ?? 'WT-13W';
+        this.alias = options.alias ?? null;
         this.hardwareId = options.hardwareId ?? null;
         this.channelCount = 0;
         this.lastJoinProposal = null;
@@ -1179,6 +1180,7 @@ class ValveDevice extends EventEmitter {
         return {
             valveId: this.valveId,
             model: this.model,
+            alias: this.alias,
             battery: this.lastBatteryText,
             batteryPercent,
             isOnline: this.isOnline,
