@@ -10,7 +10,7 @@
 
 ---
 
-**TL;DR –** Local-only control for DIIVOO irrigation timers via Home Assistant. No cloud, no account, no subscription. The radio protocol is ~95–98% reverse-engineered from scratch using logic analyzers and SPI captures over the course of more than a year. The **WT-07W** (1-zone), **WT-11W(1)** (3-zone), and **WT-13W** (4-zone) are fully supported. The 2-zone variant is still missing its device identifier – **if you own one, your help would be hugely appreciated** (more on that below).
+**TL;DR –** Local-only control for DIIVOO irrigation timers via Home Assistant. No cloud, no account, no subscription. The radio protocol is ~95–98% reverse-engineered from scratch using logic analyzers and SPI captures over the course of more than a year. The **WT-07W** (1-zone), **WT-09W** (2-zone), **WT-11W(1)** (3-zone), and **WT-13W** (4-zone) are all fully supported.
 
 ---
 
@@ -29,6 +29,7 @@ This isn't a stripped-down hack. It replicates the full feature set of the origi
 - **Rain delay / rain pause** – postpone scheduled watering when the weather doesn't cooperate
 - **Real-time status** – remaining watering time, battery level, valve state – all updating live
 - **Multi-gateway support** – run multiple gateways to cover larger gardens. This also ensures there's always a gateway in RX mode listening for valve responses while another one is busy transmitting commands
+- **Multi-language support** – entity names and UI adapt to your Home Assistant language (30+ locales supported)
 - **Auto-discovery** – your valves show up in Home Assistant as switches via MQTT, no manual YAML needed
 - **OTA firmware updates** – update your gateway firmware from the HA UI with one click (after the initial USB flash)
 - **Automatic gateway discovery** – flashed gateways announce themselves via mDNS and just show up
@@ -71,17 +72,11 @@ Home Assistant  ↔  MQTT  ↔  diivoo2mqtt  ↔  ESP32 (TCP)  ↔  DIIVOO Valve
 | Model | Zones | Status |
 |-------|-------|--------|
 | WT-07W | 1 | ✅ Fully supported |
-| WT-09W | 2 | ❓ Help wanted |
+| WT-09W | 2 | ✅ Fully supported |
 | WT-11W(1) | 3 | ✅ Fully supported |
 | WT-13W | 4 | ✅ Fully supported |
 
-The software already handles variable channel counts, so adding the 2-zone model is just a matter of identifying the right device bytes from a real pairing packet.
-
-### 👋 Own a 2-zone DIIVOO timer?
-
-There's a diagnostic export feature built into the web interface. The add-on captures what your valve sends during pairing, packages it up, and gives you a download link. You can then open a GitHub issue and attach it.
-
-No technical knowledge needed – just pair the device, hit "Export log", and share it. That's all it takes.
+The software handles variable channel counts across all supported models.
 
 ---
 
