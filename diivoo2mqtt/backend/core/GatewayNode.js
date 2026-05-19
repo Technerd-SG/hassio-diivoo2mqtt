@@ -64,27 +64,22 @@ class GatewayNode {
             this.lastSeenAt = Date.now();
             this.lastDisconnectReason = 'tcp-connected';
 
-            console.log(`[+] Gateway '${this.id}' TCP connected (${this.ip}:${this.port}), initialising radio...`);
-
-            try {
-                await this._configureRadio(
-                    this.hub.config.features.idleTxChannel,
-                    this.hub.config.features.idleRxChannel,
-                    this.hub.config.features.idleProfile
-                );
-                console.log(
-                    `[+] Gateway '${this.id}' initialised TX=${this.hub.config.features.idleTxChannel} / RX=${this.hub.config.features.idleRxChannel}`
-                );
-            } catch (err) {
-                console.error(`[!] Initial TUNE for gateway '${this.id}' failed: ${err.message}`);
-            }
+            console.log(`[+] Gateway '${this.id}' TCP connected (${this.ip}:${this.port}).`);
 
             this._setConnectionState(true, 'tcp-connected');
             this._startHeartbeatMonitor();
 
             console.log(`[+] Gateway '${this.id}' ready.`);
 
-            this.getVersion().catch(() => { });
+            this.getVersion().then(versionInfo => {
+                if (versionInfo?.uniqueId) {
+                    this.hub.emit('gatewayIdentified', {
+                        node: this,
+                        uniqueId: versionInfo.uniqueId,
+                        tempId: this.id,
+                    });
+                }
+            }).catch(() => { });
         });
 
         this.rl = readline.createInterface({
@@ -314,12 +309,14 @@ class GatewayNode {
     _parseVersionLine(line) {
         const parts = line.split(':');
         const model = parts[1] || null;
-        const version = parts.length > 2 ? parts.slice(2).join(':') : null;
+        const version = parts[2] || null;
+        const uniqueId = parts[3] || null;
 
         return {
             gatewayId: this.id,
             model,
             version,
+            uniqueId,
             raw: line,
             ts: Date.now(),
         };
@@ -411,8 +408,8 @@ class GatewayNode {
 
     _configureRadio(txChannel, rxChannel = 0, txProfile = 'short') {
         return new Promise((resolve, reject) => {
-            if (!this.isConnected && this.client) {
-                return reject(new Error(`Gateway '${this.id}' is offline.`));
+            if (!this.client || this.client.destroyed || !this.client.writable) {
+                return reject(new Error(`Gateway '${this.id}' has no live socket.`));
             }
             if (this.pendingTune) return reject(new Error('TUNE already in progress.'));
 
