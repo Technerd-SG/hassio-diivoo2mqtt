@@ -179,11 +179,12 @@
         >
           <div class="flex flex-wrap items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
             <div class="min-w-0 flex-1">
-              <template v-if="renamingDeviceId === device.valveId">
+              <template v-if=
+                        === device.valveId">
                 <form class="flex items-center gap-2" @submit.prevent="commitRename(device.valveId)">
                   <input
                     v-model="renameInput"
-                    class="theme-input rounded-xl border px-3 py-1.5 text-[18px] font-extrabold tracking-[-0.03em] w-full max-w-xs"
+                    class="theme-input w-full max-w-xs rounded-xl border px-3 py-1.5 text-[18px] font-extrabold tracking-[-0.03em]"
                     placeholder="Device name"
                     autofocus
                     @keydown.esc="cancelRename"
@@ -196,14 +197,26 @@
                 </div>
               </template>
               <template v-else>
-                <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
-                  {{ device.alias || device.model || 'Irrigation device' }}
-                </strong>
-                <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
-                  ID: {{ device.valveId }} · {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
-                </div>
+                <button type="button" class="min-w-0 text-left" @click="toggleDeviceCollapsed(device.valveId)">
+                  <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
+                    {{ device.alias || device.model || 'Irrigation device' }}
+                  </strong>
+                  <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
+                    ID: {{ device.valveId }} · {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
+                    <span class="ml-2">{{ isDeviceCollapsed(device.valveId) ? '▼ expand' : '▲ collapse' }}</span>
+                  </div>
+                </button>
               </template>
             </div>
+            <button type="button" class="text-left" @click="toggleDeviceCollapsed(device.valveId)">
+              <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
+                {{ device.model || 'Irrigation device' }} ({{ device.valveId }})
+              </strong>
+              <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
+                {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
+                <span class="ml-2">{{ isDeviceCollapsed(device.valveId) ? '▼ expand' : '▲ collapse' }}</span>
+              </div>
+            </button>
 
             <div class="flex flex-wrap gap-2 max-md:w-full">
               <div
@@ -243,7 +256,7 @@
             </div>
           </div>
 
-          <div class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] max-md:grid-cols-1">
+          <div v-if="!isDeviceCollapsed(device.valveId)" class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] max-md:grid-cols-1">
             <section
               v-for="[channelId, channel] in sortedChannels(device)"
               :key="`${device.valveId}-${channelId}`"
@@ -740,6 +753,7 @@ const rawJsonContent = ref('')
 const rawJsonError = ref('')
 const isRestarting = ref(false)
 
+const collapsedDevices = ref(new Set())
 const renamingDeviceId = ref(null)
 const renameInput = ref('')
 
@@ -1209,6 +1223,20 @@ function sendValve(deviceId, channelId, action) {
     cleanup.delete(key)
     pending.value = cleanup
   }, 2200)
+}
+
+function isDeviceCollapsed(valveId) {
+  return collapsedDevices.value.has(valveId)
+}
+
+function toggleDeviceCollapsed(valveId) {
+  const next = new Set(collapsedDevices.value)
+  if (next.has(valveId)) {
+    next.delete(valveId)
+  } else {
+    next.add(valveId)
+  }
+  collapsedDevices.value = next
 }
 
 function togglePairing() {

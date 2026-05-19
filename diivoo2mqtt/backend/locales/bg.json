@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Отвори портал",
   "gateway_clearwifi": "Gateway Изчисти WiFi",
   "gateway_refresh_version": "Gateway Обнови версия",
-  "firmware_update": "Актуализация на фърмуера"
+  "firmware_update": "Актуализация на фърмуера",
+  "valve_rain_delay": "Клапан {ch} Дъждовно забавяне",
+  "valve_rain_delay_until": "Клапан {ch} Дъждовно забавяне до"
 }

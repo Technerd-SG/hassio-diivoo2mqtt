@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Atvērt portālu",
   "gateway_clearwifi": "Gateway Notīrīt WiFi",
   "gateway_refresh_version": "Gateway Atjaunināt versiju",
-  "firmware_update": "Aparātprogrammatūras atjauninājums"
+  "firmware_update": "Aparātprogrammatūras atjauninājums",
+  "valve_rain_delay": "Vārsts {ch} Lietus aizkave",
+  "valve_rain_delay_until": "Vārsts {ch} Lietus aizkave līdz"
 }
