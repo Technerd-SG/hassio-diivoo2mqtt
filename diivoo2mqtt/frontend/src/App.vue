@@ -179,8 +179,7 @@
         >
           <div class="flex flex-wrap items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
             <div class="min-w-0 flex-1">
-              <template v-if=
-                        === device.valveId">
+              <template v-if="renamingDeviceId === device.valveId">
                 <form class="flex items-center gap-2" @submit.prevent="commitRename(device.valveId)">
                   <input
                     v-model="renameInput"
@@ -208,16 +207,6 @@
                 </button>
               </template>
             </div>
-            <button type="button" class="text-left" @click="toggleDeviceCollapsed(device.valveId)">
-              <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
-                {{ device.model || 'Irrigation device' }} ({{ device.valveId }})
-              </strong>
-              <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
-                {{ channelCount(device) }} valve{{ channelCount(device) === 1 ? '' : 's' }}
-                <span class="ml-2">{{ isDeviceCollapsed(device.valveId) ? '▼ expand' : '▲ collapse' }}</span>
-              </div>
-            </button>
-
             <div class="flex flex-wrap gap-2 max-md:w-full">
               <div
                 class="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center"
