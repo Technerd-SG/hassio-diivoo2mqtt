@@ -70,6 +70,7 @@ class DeviceStore {
                 return {
                     valveId: device.valveId,
                     model: device.model,
+                    alias: device.alias ?? null,
                     hardwareId: device.hardwareId,
                     channelCount: device.channelCount,
                     isBound: device.isBound,

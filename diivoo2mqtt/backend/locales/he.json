@@ -9,5 +9,7 @@
   "gateway_portal": "שער פתח פורטל",
   "gateway_clearwifi": "שער נקה WiFi",
   "gateway_refresh_version": "שער רענן גרסה",
-  "firmware_update": "עדכון קושחה"
+  "firmware_update": "עדכון קושחה",
+  "valve_rain_delay": "שסתום {ch} עיכוב גשם",
+  "valve_rain_delay_until": "שסתום {ch} עיכוב גשם עד"
 }

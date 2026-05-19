@@ -9,5 +9,7 @@
   "gateway_portal": "Шлюз Открыть портал",
   "gateway_clearwifi": "Шлюз Очистить WiFi",
   "gateway_refresh_version": "Шлюз Обновить версию",
-  "firmware_update": "Обновление прошивки"
+  "firmware_update": "Обновление прошивки",
+  "valve_rain_delay": "Клапан {ch} Задержка дождя",
+  "valve_rain_delay_until": "Клапан {ch} Задержка дождя до"
 }

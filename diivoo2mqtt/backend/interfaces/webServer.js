@@ -231,11 +231,21 @@ class WebServer {
             socket.on('removeDevice', ({ valveId }) => {
                 if (this.hub && typeof this.hub.removeDevice === 'function') {
                     this.hub.removeDevice(valveId);
-                    
+
                     // Broadcast updated list
                     const allStates = Array.from(this.hub.devices.values()).map((device) => device.getLiveState());
                     this.io.emit('initialState', allStates);
                 }
+            });
+
+            socket.on('renameDevice', ({ valveId, alias }) => {
+                if (!this.hub || typeof this.hub.renameDevice !== 'function') return;
+                const ok = this.hub.renameDevice(valveId, alias);
+                if (ok) {
+                    const allStates = Array.from(this.hub.devices.values()).map((device) => device.getLiveState());
+                    this.io.emit('initialState', allStates);
+                }
+                socket.emit('commandResult', { ok, valveId, action: 'renameDevice' });
             });
 
             socket.on('setValve', async ({ valveId, channelId, state, duration }) => {
@@ -298,6 +308,8 @@ class WebServer {
                     });
 
                     this._applyChannelConfig(device, Number(channelId), config || {});
+
+                    device._notifyStateChange('channel-config-updated');
 
                     console.log('[Web] saveChannelConfig applied', {
                         valveId,
@@ -657,21 +669,15 @@ class WebServer {
     }
 
     async _triggerDeviceRefresh(device, channelId, reason = 'config-change') {
-        if (!device || typeof device.executeWakeUpPing !== 'function') {
+        if (!device || typeof device.sendPingTrigger !== 'function') {
             return;
         }
-
-        console.log(
-            `[Web] Sending wake-up ping to valve ${device.valveId}, channel ${channelId} due to ${reason}`
-        );
-
-        // Verwende den robusten Wake-Up Ping (versucht 0x20, fällt auf Legacy 0x82 zurück)
-        const success = await device.executeWakeUpPing(3, 800);
-
-        if (success) {
-            console.log(`[Web] Wake-up successful, valve is awake and fetching settings.`);
+        console.log(`[Web] Sending config-refresh ping (0x20/03) to valve ${device.valveId}, channel ${channelId} due to ${reason}`);
+        const followUps = await device.sendPingTrigger(null, 2, 0x03);
+        if (Array.isArray(followUps) && followUps.length > 0) {
+            console.log(`[Web] Config refresh triggered on valve ${device.valveId} - device is pulling updated config.`);
         } else {
-            console.warn(`[Web] No direct response to wake-up ping from valve ${device.valveId}.`);
+            console.warn(`[Web] No response to config-refresh ping from valve ${device.valveId}.`);
         }
     }
 

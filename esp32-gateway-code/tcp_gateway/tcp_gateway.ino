@@ -6,6 +6,9 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <ESPmDNS.h>
+#include "esp_netif.h"
+#include "esp_err.h"
+#include "mdns.h"
 
 // ============================================================
 // Firmware Verision
@@ -107,6 +110,13 @@ uint32_t rebootAtMs = 0;
 bool portalStartScheduled = false;
 uint32_t portalStartAtMs = 0;
 constexpr uint32_t PORTAL_START_DELAY_MS = 700;
+
+// mDNS Announcement-Intervall
+constexpr uint32_t MDNS_ANNOUNCE_NO_CLIENT_MS = 60UL * 1000UL;
+constexpr uint32_t MDNS_ANNOUNCE_WITH_CLIENT_MS = 10UL * 60UL * 1000UL;
+bool mdnsResponderStarted = false;
+uint32_t lastMdnsAnnounceMs = 0;
+bool lastMdnsHadClient = false;
 
 constexpr uint32_t WIFI_CONNECT_TIMEOUT_MS = 15000;
 constexpr char PREF_NAMESPACE[] = "netcfg";
@@ -730,9 +740,24 @@ bool connectToStoredWiFi(uint32_t timeoutMs = WIFI_CONNECT_TIMEOUT_MS) {
     snprintf(mdnsName, sizeof(mdnsName), "diivoo-gw-%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     
     if (MDNS.begin(mdnsName)) {
+      mdnsResponderStarted = true;
+      lastMdnsAnnounceMs = millis();
+      lastMdnsHadClient = hasActiveClient();
+
       Serial.printf("[mDNS] Responder gestartet: %s.local\n", mdnsName);
       MDNS.addService("diivoo", "tcp", TCP_PORT);
+
+      char macHex[13];
+      char macColon[18];
+      getGatewayMacHex(macHex, sizeof(macHex));
+      getGatewayMacColon(macColon, sizeof(macColon));
+
+      MDNS.addServiceTxt("diivoo", "tcp", "model", FW_MODEL);
+      MDNS.addServiceTxt("diivoo", "tcp", "version", FW_VERSION);
+      MDNS.addServiceTxt("diivoo", "tcp", "mac", macHex);
+      MDNS.addServiceTxt("diivoo", "tcp", "mac_colon", macColon);
     } else {
+      mdnsResponderStarted = false;
       Serial.println("[mDNS] Fehler beim Starten des mDNS Responders!");
     }
 
@@ -823,6 +848,45 @@ void serviceDeferredActions() {
     Serial.println("[PORTAL] Aktuelle WLAN-Verbindung wird getrennt.");
 
     startConfigPortal();
+  }
+}
+
+void announceMdnsNow(const char* reason) {
+  if (!mdnsResponderStarted) return;
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  esp_netif_t* staNetif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+  if (staNetif == nullptr) {
+    Serial.println("[mDNS] Announcement skipped: WIFI_STA_DEF not found.");
+    return;
+  }
+
+  esp_err_t err = mdns_netif_action(staNetif, MDNS_EVENT_ANNOUNCE_IP4);
+
+  if (err == ESP_OK) {
+    Serial.printf("[mDNS] Announcement sent (%s).\n", reason);
+  } else {
+    Serial.printf("[mDNS] Announcement failed (%s): %s\n", reason, esp_err_to_name(err));
+  }
+}
+
+void serviceMdnsAnnounce() {
+  if (!mdnsResponderStarted) return;
+  if (WiFi.status() != WL_CONNECTED) return;
+  if (configPortalActive) return;
+
+  const bool hasClient = hasActiveClient();
+  const uint32_t interval = hasClient
+    ? MDNS_ANNOUNCE_WITH_CLIENT_MS
+    : MDNS_ANNOUNCE_NO_CLIENT_MS;
+
+  const uint32_t now = millis();
+  const bool clientStateChanged = hasClient != lastMdnsHadClient;
+
+  if (clientStateChanged || (now - lastMdnsAnnounceMs) >= interval) {
+    lastMdnsHadClient = hasClient;
+    lastMdnsAnnounceMs = now;
+    announceMdnsNow(clientStateChanged ? "client-state-change" : "interval");
   }
 }
 
@@ -1040,9 +1104,24 @@ void serviceClientInput() {
   }
 }
 
+void getGatewayMacHex(char* out, size_t outLen) {
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  snprintf(out, outLen, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+void getGatewayMacColon(char* out, size_t outLen) {
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  snprintf(out, outLen, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
 void reportVersion() {
-  char line[96];
-  snprintf(line, sizeof(line), "VERSION:%s:%s", FW_MODEL, FW_VERSION);
+  char macHex[13];
+  getGatewayMacHex(macHex, sizeof(macHex));
+
+  char line[128];
+  snprintf(line, sizeof(line), "VERSION:%s:%s:%s", FW_MODEL, FW_VERSION, macHex);
 
   if (hasActiveClient()) {
     activeClient.println(line);
@@ -1254,6 +1333,7 @@ void loop() {
   serviceSerialInput();
   serviceConfigPortal();
   serviceDeferredActions();
+  serviceMdnsAnnounce();
   handleHardwareUI();
 
   serviceClientLifecycle();

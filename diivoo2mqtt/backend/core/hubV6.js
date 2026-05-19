@@ -83,6 +83,7 @@ class SmartHub extends EventEmitter {
             const device = new ValveDevice(data.valveId, this.config.id, this.gatewayApi, {
                 isBound: data.isBound,
                 model: data.model,
+                alias: data.alias ?? null,
                 channelCount: data.channelCount,
                 deviceAddress: data.deviceAddress,
                 channelCode: data.channelCode,
@@ -415,6 +416,18 @@ class SmartHub extends EventEmitter {
             this.deviceStore.save(this.devices);
             console.log(`[SmartHub] Device ${id} removed and store updated.`);
         }
+    }
+
+    renameDevice(valveId, alias) {
+        const id = Number(valveId);
+        const device = this.devices.get(id);
+        if (!device) return false;
+
+        device.alias = alias && alias.trim() ? alias.trim() : null;
+        this.deviceStore.save(this.devices);
+        this.emit('deviceRenamed', { valveId: id, alias: device.alias });
+        console.log(`[SmartHub] Device ${id} renamed to: ${device.alias ?? '(default)'}`);
+        return true;
     }
 
     async routePacket(hex, txChannel, rxChannel, candidates, options = {}) {

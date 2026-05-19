@@ -49,6 +49,7 @@ class ValveDevice extends EventEmitter {
 
         // Metadaten
         this.model = options.model ?? 'WT-13W';
+        this.alias = options.alias ?? null;
         this.hardwareId = options.hardwareId ?? null;
         this.channelCount = 0;
         this.lastJoinProposal = null;
@@ -829,12 +830,12 @@ class ValveDevice extends EventEmitter {
         return result;
     }
 
-    async sendPingTrigger(correlationToken = null, maxRetransmits = 2) {
+    async sendPingTrigger(correlationToken = null, maxRetransmits = 2, mode = 0x01) {
         const token = correlationToken ?? this.nextCommandSeq();
 
         for (let attempt = 0; attempt <= maxRetransmits; attempt++) {
             const seq = this.nextCommandSeq();
-            const payload = [token & 0xff, 0x01];
+            const payload = [token & 0xff, mode];
 
             if (attempt === 0) {
                 console.log(
@@ -1152,13 +1153,29 @@ class ValveDevice extends EventEmitter {
             const liveIsRunning = ch.isRunning && currentRemaining > 0;
             const liveStatus = liveIsRunning ? ch.status : 'AUS';
 
+            const rd = ch.settings?.rainDelayDate;
+            let rainDelayHours = 0;
+            let rainDelayUntil = 'Off';
+            if (rd instanceof Date && rd.getTime() > now) {
+                rainDelayHours = Math.ceil((rd.getTime() - now) / 3600000);
+
+                const y = rd.getFullYear();
+                const mo = String(rd.getMonth() + 1).padStart(2, '0');
+                const d = String(rd.getDate()).padStart(2, '0');
+                const h = String(rd.getHours()).padStart(2, '0');
+                const mi = String(rd.getMinutes()).padStart(2, '0');
+                rainDelayUntil = `${y}-${mo}-${d} ${h}:${mi}`;
+            }
+
             liveChannels[i] = {
                 status: liveStatus,
                 isRunning: liveIsRunning,
                 remainingLive: currentRemaining,
                 targetRuntime: ch.runtime,
                 source: ch.sourceText,
-                lastSync: ch.lastSyncTime ? new Date(ch.lastSyncTime).toISOString() : null
+                lastSync: ch.lastSyncTime ? new Date(ch.lastSyncTime).toISOString() : null,
+                rainDelayHours,
+                rainDelayUntil
             };
         }
 
@@ -1179,6 +1196,7 @@ class ValveDevice extends EventEmitter {
         return {
             valveId: this.valveId,
             model: this.model,
+            alias: this.alias,
             battery: this.lastBatteryText,
             batteryPercent,
             isOnline: this.isOnline,

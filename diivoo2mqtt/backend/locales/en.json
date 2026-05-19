@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Open Portal",
   "gateway_clearwifi": "Gateway Clear WiFi",
   "gateway_refresh_version": "Gateway Refresh Version",
-  "firmware_update": "Firmware Update"
+  "firmware_update": "Firmware Update",
+  "valve_rain_delay": "Valve {ch} Rain Delay",
+  "valve_rain_delay_until": "Valve {ch} Rain Delay Until"
 }

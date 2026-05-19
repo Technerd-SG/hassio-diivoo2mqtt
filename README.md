@@ -26,13 +26,14 @@ This isn't a stripped-down hack. It replicates the full feature set of the origi
 
 - **Turn valves on/off** with configurable default watering duration
 - **Watering schedules** – set up your irrigation plans and let them run automatically
-- **Rain delay / rain pause** – postpone scheduled watering when the weather doesn't cooperate
+- **Rain delay / rain pause** – postpone scheduled watering; controllable as a per-channel number entity (0–168 h) in Home Assistant, with a matching expiry datetime sensor
 - **Real-time status** – remaining watering time, battery level, valve state – all updating live
 - **Multi-gateway support** – run multiple gateways to cover larger gardens. This also ensures there's always a gateway in RX mode listening for valve responses while another one is busy transmitting commands
 - **Multi-language support** – entity names and UI adapt to your Home Assistant language (30+ locales supported)
 - **Auto-discovery** – your valves show up in Home Assistant as switches via MQTT, no manual YAML needed
 - **OTA firmware updates** – update your gateway firmware from the HA UI with one click (after the initial USB flash)
 - **Automatic gateway discovery** – flashed gateways announce themselves via mDNS and just show up; discovered gateways are persisted so the connection re-establishes after an add-on restart without needing an ESP32 reboot
+- **Device renaming** – rename valves from the web UI; the new name syncs to Home Assistant immediately without losing entity history
 - **Built-in web UI** via Ingress – manage gateways, see device states, trigger diagnostics
 - **WiFi setup portal** on the gateway itself – if the ESP32 can't connect, it opens an AP with a captive portal to configure credentials
 
