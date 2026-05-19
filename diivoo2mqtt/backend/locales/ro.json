@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Deschide portal",
   "gateway_clearwifi": "Gateway Șterge WiFi",
   "gateway_refresh_version": "Gateway Actualizează versiunea",
-  "firmware_update": "Actualizare firmware"
+  "firmware_update": "Actualizare firmware",
+  "valve_rain_delay": "Supapă {ch} Întârziere ploaie",
+  "valve_rain_delay_until": "Supapă {ch} Întârziere ploaie până la"
 }

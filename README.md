@@ -26,7 +26,7 @@ This isn't a stripped-down hack. It replicates the full feature set of the origi
 
 - **Turn valves on/off** with configurable default watering duration
 - **Watering schedules** – set up your irrigation plans and let them run automatically
-- **Rain delay / rain pause** – postpone scheduled watering when the weather doesn't cooperate
+- **Rain delay / rain pause** – postpone scheduled watering; controllable as a per-channel number entity (0–168 h) in Home Assistant, with a matching expiry datetime sensor
 - **Real-time status** – remaining watering time, battery level, valve state – all updating live
 - **Multi-gateway support** – run multiple gateways to cover larger gardens. This also ensures there's always a gateway in RX mode listening for valve responses while another one is busy transmitting commands
 - **Multi-language support** – entity names and UI adapt to your Home Assistant language (30+ locales supported)

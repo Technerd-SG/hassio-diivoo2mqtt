@@ -9,5 +9,7 @@
   "gateway_portal": "Шлюз Відкрити портал",
   "gateway_clearwifi": "Шлюз Очистити WiFi",
   "gateway_refresh_version": "Шлюз Оновити версію",
-  "firmware_update": "Оновлення прошивки"
+  "firmware_update": "Оновлення прошивки",
+  "valve_rain_delay": "Клапан {ch} Затримка дощу",
+  "valve_rain_delay_until": "Клапан {ch} Затримка дощу до"
 }

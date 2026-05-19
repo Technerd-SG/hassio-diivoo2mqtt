@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Otwórz portal",
   "gateway_clearwifi": "Gateway Wyczyść WiFi",
   "gateway_refresh_version": "Gateway Odśwież wersję",
-  "firmware_update": "Aktualizacja firmware"
+  "firmware_update": "Aktualizacja firmware",
+  "valve_rain_delay": "Zawór {ch} Opóźnienie deszczu",
+  "valve_rain_delay_until": "Zawór {ch} Opóźnienie deszczu do"
 }

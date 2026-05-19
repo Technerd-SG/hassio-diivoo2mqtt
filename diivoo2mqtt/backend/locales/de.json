@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Portal starten",
   "gateway_clearwifi": "Gateway WLAN löschen",
   "gateway_refresh_version": "Gateway Version abfragen",
-  "firmware_update": "Firmware-Update"
+  "firmware_update": "Firmware-Update",
+  "valve_rain_delay": "Ventil {ch} Regenverzögerung",
+  "valve_rain_delay_until": "Ventil {ch} Regenverzögerung bis"
 }

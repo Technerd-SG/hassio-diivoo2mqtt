@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Mở cổng",
   "gateway_clearwifi": "Gateway Xóa WiFi",
   "gateway_refresh_version": "Gateway Làm mới phiên bản",
-  "firmware_update": "Cập nhật firmware"
+  "firmware_update": "Cập nhật firmware",
+  "valve_rain_delay": "Van {ch} Trì hoãn mưa",
+  "valve_rain_delay_until": "Van {ch} Trì hoãn mưa đến"
 }

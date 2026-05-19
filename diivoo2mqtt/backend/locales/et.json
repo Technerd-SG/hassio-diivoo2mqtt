@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Ava portaal",
   "gateway_clearwifi": "Gateway Kustuta WiFi",
   "gateway_refresh_version": "Gateway Uuenda versiooni",
-  "firmware_update": "Püsivara uuendus"
+  "firmware_update": "Püsivara uuendus",
+  "valve_rain_delay": "Ventiil {ch} Vihmaviivitus",
+  "valve_rain_delay_until": "Ventiil {ch} Vihmaviivitus kuni"
 }

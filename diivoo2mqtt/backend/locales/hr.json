@@ -9,5 +9,7 @@
   "gateway_portal": "Gateway Otvori portal",
   "gateway_clearwifi": "Gateway Obriši WiFi",
   "gateway_refresh_version": "Gateway Osvježi verziju",
-  "firmware_update": "Ažuriranje firmwarea"
+  "firmware_update": "Ažuriranje firmwarea",
+  "valve_rain_delay": "Ventil {ch} Kašnjenje kiše",
+  "valve_rain_delay_until": "Ventil {ch} Kašnjenje kiše do"
 }

@@ -9,5 +9,7 @@
   "gateway_portal": "閘道開啟入口",
   "gateway_clearwifi": "閘道清除 WiFi",
   "gateway_refresh_version": "閘道重新整理版本",
-  "firmware_update": "韌體更新"
+  "firmware_update": "韌體更新",
+  "valve_rain_delay": "閥門 {ch} 雨天延遲",
+  "valve_rain_delay_until": "閥門 {ch} 雨天延遲至"
 }
