@@ -1,0 +1,15 @@
+{
+  "valve": "{ch}. szelep",
+  "valve_remaining": "{ch}. szelep hátralévő idő",
+  "valve_source": "{ch}. szelep forrás",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway verzió",
+  "gateway_model": "Gateway modell",
+  "gateway_button": "Gateway gomb",
+  "gateway_portal": "Gateway portál megnyitása",
+  "gateway_clearwifi": "Gateway WiFi törlése",
+  "gateway_refresh_version": "Gateway verzió frissítése",
+  "firmware_update": "Firmware-frissítés",
+  "valve_rain_delay": "Szelep {ch} Esőkésleltetés",
+  "valve_rain_delay_until": "Szelep {ch} Esőkésleltetés eddig"
+}

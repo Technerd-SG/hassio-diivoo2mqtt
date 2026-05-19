@@ -1,0 +1,15 @@
+{
+  "valve": "Ventil {ch}",
+  "valve_remaining": "Ventil {ch} Resterende tid",
+  "valve_source": "Ventil {ch} Kilde",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Version",
+  "gateway_model": "Gateway Model",
+  "gateway_button": "Gateway Knap",
+  "gateway_portal": "Gateway Åbn portal",
+  "gateway_clearwifi": "Gateway Ryd WiFi",
+  "gateway_refresh_version": "Gateway Opdater version",
+  "firmware_update": "Firmwareopdatering",
+  "valve_rain_delay": "Ventil {ch} Regn forsinkelse",
+  "valve_rain_delay_until": "Ventil {ch} Regn forsinkelse til"
+}

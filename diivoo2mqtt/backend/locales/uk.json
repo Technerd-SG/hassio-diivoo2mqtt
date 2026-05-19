@@ -1,0 +1,15 @@
+{
+  "valve": "Клапан {ch}",
+  "valve_remaining": "Клапан {ch} Залишковий час",
+  "valve_source": "Клапан {ch} Джерело",
+  "gateway_led": "Шлюз LED",
+  "gateway_version": "Шлюз Версія",
+  "gateway_model": "Шлюз Модель",
+  "gateway_button": "Шлюз Кнопка",
+  "gateway_portal": "Шлюз Відкрити портал",
+  "gateway_clearwifi": "Шлюз Очистити WiFi",
+  "gateway_refresh_version": "Шлюз Оновити версію",
+  "firmware_update": "Оновлення прошивки",
+  "valve_rain_delay": "Клапан {ch} Затримка дощу",
+  "valve_rain_delay_until": "Клапан {ch} Затримка дощу до"
+}

@@ -1,11 +1,43 @@
 // interfaces/mqttBridge.js
 const mqtt = require('mqtt');
+const path = require('path');
+const fs = require('fs');
+
+function loadLocale(lang) {
+    const localesDir = path.join(__dirname, '..', 'locales');
+    const file = path.join(localesDir, `${lang}.json`);
+
+    try {
+        if (fs.existsSync(file)) {
+            return JSON.parse(fs.readFileSync(file, 'utf8'));
+        }
+    } catch (err) {
+        console.warn(`[MQTT] Failed to load locale '${lang}': ${err.message}. Falling back to en.json.`);
+    }
+
+    const enFile = path.join(localesDir, 'en.json');
+    try {
+        return JSON.parse(fs.readFileSync(enFile, 'utf8'));
+    } catch (err) {
+        console.warn(`[MQTT] Failed to load en.json locale: ${err.message}. Using hardcoded fallback.`);
+        return {};
+    }
+}
+
+function t(strings, key, vars = {}) {
+    let str = strings[key] || key;
+    for (const [k, v] of Object.entries(vars)) {
+        str = str.replace(`{${k}}`, v);
+    }
+    return str;
+}
 
 class MqttBridge {
     constructor(hub, config) {
         this.hub = hub;
         this.config = config;
         this.discoveryPrefix = config.discoveryPrefix || 'homeassistant';
+        this.strings = loadLocale(config.language || 'en');
 
         this.discoveredValves = new Set();
         this.discoveredGateways = new Set();
@@ -17,11 +49,12 @@ class MqttBridge {
         });
 
         this.client.on('connect', async () => {
-            console.log('[MQTT] Verbunden mit Broker');
+            console.log('[MQTT] Connected to broker');
 
             // Eingehende Befehle von Home Assistant
             this.client.subscribe([
                 'diivoo/+/valve/+/set',
+                'diivoo/+/ch/+/rain_delay/set',
                 'diivoo/gateway/+/led/set',
                 'diivoo/gateway/+/portal/press',
                 'diivoo/gateway/+/clearwifi/press',
@@ -157,7 +190,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/sensor/${valveId}_battery/config`,
             JSON.stringify({
-                name: 'Batterie',
+                name: null,
                 unique_id: `diivoo_${valveId}_battery`,
                 state_topic: stateTopic,
                 value_template: '{{ value_json.batteryPercent }}',
@@ -172,7 +205,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/binary_sensor/${valveId}_online/config`,
             JSON.stringify({
-                name: 'Verbindung',
+                name: null,
                 unique_id: `diivoo_${valveId}_online`,
                 state_topic: stateTopic,
                 value_template: "{{ 'ON' if value_json.isOnline else 'OFF' }}",
@@ -188,7 +221,7 @@ class MqttBridge {
             this._publish(
                 `${discoveryPrefix}/switch/${valveId}_ch${ch}/config`,
                 JSON.stringify({
-                    name: `Ventil ${ch}`,
+                    name: t(this.strings, 'valve', { ch }),
                     unique_id: `diivoo_${valveId}_valve_${ch}`,
                     state_topic: stateTopic,
                     command_topic: `diivoo/${valveId}/valve/${ch}/set`,
@@ -204,7 +237,7 @@ class MqttBridge {
             this._publish(
                 `${discoveryPrefix}/sensor/${valveId}_ch${ch}_remaining/config`,
                 JSON.stringify({
-                    name: `Ventil ${ch} Restzeit`,
+                    name: t(this.strings, 'valve_remaining', { ch }),
                     unique_id: `diivoo_${valveId}_remaining_${ch}`,
                     state_topic: stateTopic,
                     value_template: `{{ value_json.channels['${ch}'].remainingLive }}`,
@@ -218,11 +251,46 @@ class MqttBridge {
             this._publish(
                 `${discoveryPrefix}/sensor/${valveId}_ch${ch}_source/config`,
                 JSON.stringify({
-                    name: `Ventil ${ch} Auslöser`,
+                    name: t(this.strings, 'valve_source', { ch }),
                     unique_id: `diivoo_${valveId}_source_${ch}`,
                     state_topic: stateTopic,
                     value_template: `{{ value_json.channels['${ch}'].source }}`,
                     icon: 'mdi:information-outline',
+                    entity_category: 'diagnostic',
+                    device: deviceBase
+                })
+            );
+
+            // Remove old select entity if it exists
+            this._publish(`${discoveryPrefix}/select/${valveId}_ch${ch}_rain_delay/config`, '', { retain: true });
+
+            // Rain Delay (hours, 0 = off)
+            this._publish(
+                `${discoveryPrefix}/number/${valveId}_ch${ch}_rain_delay/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_rain_delay', { ch }),
+                    unique_id: `diivoo_${valveId}_rain_delay_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].rainDelayHours }}`,
+                    command_topic: `diivoo/${valveId}/ch/${ch}/rain_delay/set`,
+                    min: 0,
+                    max: 168,
+                    step: 1,
+                    unit_of_measurement: 'h',
+                    icon: 'mdi:weather-rainy',
+                    device: deviceBase
+                })
+            );
+
+            // Rain Delay expiry sensor (shows actual end datetime or 'Off')
+            this._publish(
+                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_rain_delay_until/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_rain_delay_until', { ch }),
+                    unique_id: `diivoo_${valveId}_rain_delay_until_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].rainDelayUntil }}`,
+                    icon: 'mdi:calendar-clock',
                     entity_category: 'diagnostic',
                     device: deviceBase
                 })
@@ -280,7 +348,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/light/gateway_${gatewayId}_led/config`,
             JSON.stringify({
-                name: 'Gateway LED',
+                name: t(this.strings, 'gateway_led'),
                 unique_id: `diivoo_gateway_${gatewayId}_led`,
                 schema: 'json',
                 state_topic: stateTopic,
@@ -294,7 +362,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/sensor/gateway_${gatewayId}_version/config`,
             JSON.stringify({
-                name: 'Gateway Version',
+                name: t(this.strings, 'gateway_version'),
                 unique_id: `diivoo_gateway_${gatewayId}_version`,
                 state_topic: stateTopic,
                 value_template: '{{ value_json.version }}',
@@ -308,7 +376,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/sensor/gateway_${gatewayId}_model/config`,
             JSON.stringify({
-                name: 'Gateway Modell',
+                name: t(this.strings, 'gateway_model'),
                 unique_id: `diivoo_gateway_${gatewayId}_model`,
                 state_topic: stateTopic,
                 value_template: '{{ value_json.model }}',
@@ -322,7 +390,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/binary_sensor/gateway_${gatewayId}_online/config`,
             JSON.stringify({
-                name: 'Gateway Verbindung',
+                name: null,
                 unique_id: `diivoo_gateway_${gatewayId}_online`,
                 state_topic: stateTopic,
                 value_template: "{{ 'ON' if value_json.connected else 'OFF' }}",
@@ -336,7 +404,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/binary_sensor/gateway_${gatewayId}_button/config`,
             JSON.stringify({
-                name: 'Gateway Taste',
+                name: t(this.strings, 'gateway_button'),
                 unique_id: `diivoo_gateway_${gatewayId}_button`,
                 state_topic: stateTopic,
                 value_template: "{{ 'ON' if value_json.buttonPressed else 'OFF' }}",
@@ -349,7 +417,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/button/gateway_${gatewayId}_portal/config`,
             JSON.stringify({
-                name: 'Gateway Portal starten',
+                name: t(this.strings, 'gateway_portal'),
                 unique_id: `diivoo_gateway_${gatewayId}_portal`,
                 command_topic: `diivoo/gateway/${gatewayId}/portal/press`,
                 payload_press: 'PRESS',
@@ -363,7 +431,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/button/gateway_${gatewayId}_clearwifi/config`,
             JSON.stringify({
-                name: 'Gateway WLAN löschen',
+                name: t(this.strings, 'gateway_clearwifi'),
                 unique_id: `diivoo_gateway_${gatewayId}_clearwifi`,
                 command_topic: `diivoo/gateway/${gatewayId}/clearwifi/press`,
                 payload_press: 'PRESS',
@@ -377,7 +445,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/button/gateway_${gatewayId}_refresh_version/config`,
             JSON.stringify({
-                name: 'Gateway Version abfragen',
+                name: t(this.strings, 'gateway_refresh_version'),
                 unique_id: `diivoo_gateway_${gatewayId}_refresh_version`,
                 command_topic: `diivoo/gateway/${gatewayId}/version/get`,
                 payload_press: 'PRESS',
@@ -391,7 +459,7 @@ class MqttBridge {
         this._publish(
             `${discoveryPrefix}/update/gateway_${gatewayId}_fw/config`,
             JSON.stringify({
-                name: 'Firmware Update',
+                name: t(this.strings, 'firmware_update'),
                 unique_id: `diivoo_gateway_${gatewayId}_update`,
                 state_topic: `diivoo/gateway/${gatewayId}/update`,
                 command_topic: `diivoo/gateway/${gatewayId}/update/set`,
@@ -450,7 +518,7 @@ class MqttBridge {
             try {
                 await this.hub.getGatewayVersion(gatewayId);
             } catch (err) {
-                console.warn(`[MQTT] Konnte Gateway-Version für ${gatewayId} nicht abfragen: ${err.message}`);
+                console.warn(`[MQTT] Could not query gateway version for ${gatewayId}: ${err.message}`);
             }
         }
     }
@@ -475,7 +543,7 @@ class MqttBridge {
         // Fallback: Falls ACK:OTA_OK nicht ankam aber das Gateway jetzt mit der neuen Version antwortet
         const gw = this._getGatewayNode(gatewayId);
         if (gw?.otaPendingVersion && version === gw.otaPendingVersion) {
-            console.log(`[MQTT] OTA-Erfolg per Version-Fallback bestätigt: ${gatewayId} läuft jetzt auf ${version}`);
+            console.log(`[MQTT] OTA success confirmed via version fallback: ${gatewayId} is now on ${version}`);
             this._publish(`diivoo/gateway/${gatewayId}/update`, JSON.stringify({
                 installed_version: version,
                 latest_version: version,
@@ -497,7 +565,7 @@ class MqttBridge {
         gwState.lastUpdateTs = ev.ts || Date.now();
 
         console.log(
-            `[MQTT] Gateway ${ev.gatewayId} ist jetzt ${ev.connected ? 'online' : 'offline'} (${ev.reason || 'unknown'})`
+            `[MQTT] Gateway ${ev.gatewayId} is now ${ev.connected ? 'online' : 'offline'} (${ev.reason || 'unknown'})`
         );
 
         this.publishGatewayState(ev.gatewayId);
@@ -543,7 +611,7 @@ class MqttBridge {
                     in_progress: false
                 }));
             }
-            console.error(`[MQTT] OTA fehlgeschlagen für ${gatewayId}: ${status}`);
+            console.error(`[MQTT] OTA failed for ${gatewayId}: ${status}`);
         }
     }
 
@@ -585,8 +653,46 @@ class MqttBridge {
                     await device.valve(channelId).off();
                 }
             } catch (err) {
-                console.error(`[MQTT] Ventilkommando fehlgeschlagen: ${err.message}`);
+                console.error(`[MQTT] Valve command failed: ${err.message}`);
             }
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // Rain Delay: diivoo/{valveId}/ch/{channelId}/rain_delay/set
+        // Payload: 'Off' | '24 hours' | '48 hours' | '72 hours' | '1 week'
+        // --------------------------------------------------------
+        if (parts.length === 6 && parts[0] === 'diivoo' && parts[2] === 'ch' && parts[4] === 'rain_delay' && parts[5] === 'set') {
+            const valveId = parseInt(parts[1], 10);
+            const channelId = parseInt(parts[3], 10);
+
+            const device = this.hub.devices.get(valveId);
+            if (!device) return;
+
+            const channel = device.channels?.[channelId];
+            if (!channel) return;
+
+            if (!channel.settings) {
+                channel.settings = { durationSeconds: 600, intervalOnSeconds: 10, intervalOffSeconds: 30, rainDelayDate: null };
+            }
+
+            const hours = Math.round(parseFloat(raw.trim()));
+
+            if (!Number.isFinite(hours) || hours < 0 || hours > 168) {
+                console.warn(`[MQTT] Invalid rain delay hours: ${raw}`);
+                return;
+            }
+
+            channel.settings.rainDelayDate = hours > 0 ? new Date(Date.now() + hours * 3600000) : null;
+
+            console.log(`[MQTT] Rain delay for valve ${valveId} ch${channelId}: ${hours}h`);
+
+            device._notifyStateChange('rain-delay-mqtt');
+
+            device.sendPingTrigger(null, 2, 0x03).catch(err => {
+                console.error(`[MQTT] Rain delay ping failed for valve ${valveId}: ${err.message}`);
+            });
 
             return;
         }
@@ -600,7 +706,7 @@ class MqttBridge {
             const desiredState = this._extractOnOff(raw);
 
             if (!desiredState) {
-                console.warn(`[MQTT] Unbekannter LED-Payload für ${gatewayId}: ${raw}`);
+                console.warn(`[MQTT] Unknown LED payload for ${gatewayId}: ${raw}`);
                 return;
             }
 
@@ -613,7 +719,7 @@ class MqttBridge {
 
                 this.publishGatewayState(gatewayId);
             } catch (err) {
-                console.error(`[MQTT] LED-Kommando fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] LED command failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -628,7 +734,7 @@ class MqttBridge {
             try {
                 await this.hub.startGatewayPortal(gatewayId);
             } catch (err) {
-                console.error(`[MQTT] PORTAL fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] PORTAL command failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -643,7 +749,7 @@ class MqttBridge {
             try {
                 await this.hub.clearGatewayWifi(gatewayId);
             } catch (err) {
-                console.error(`[MQTT] CLEARWIFI fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] CLEARWIFI command failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -661,7 +767,7 @@ class MqttBridge {
                     gwNode.getVersion().catch(() => {});
                 }
             } catch (err) {
-                console.error(`[MQTT] VERSION GET fehlgeschlagen (${gatewayId}): ${err.message}`);
+                console.error(`[MQTT] VERSION GET failed (${gatewayId}): ${err.message}`);
             }
 
             return;
@@ -677,10 +783,10 @@ class MqttBridge {
             if (messageStr === 'INSTALL') {
                 if (this.hub.otaManager) {
                     const port = process.env.WEB_PORT || 8099;
-                    console.log(`[MQTT] Triggere OTA Update für ${gatewayId} via Home Assistant`);
+                    console.log(`[MQTT] Triggering OTA update for ${gatewayId} via Home Assistant`);
                     // in_progress / Status-Updates kommen jetzt über gatewayOtaStatus Events vom ESP32
                     this.hub.otaManager.triggerUpdate(gatewayId, null, port).catch(err => {
-                        console.error(`[MQTT] OTA Fehler: ${err.message}`);
+                        console.error(`[MQTT] OTA error: ${err.message}`);
                     });
                 }
             }

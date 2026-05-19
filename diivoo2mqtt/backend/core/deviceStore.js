@@ -36,7 +36,7 @@ class DeviceStore {
         if (!this.isDirty || !this.latestSerialized) return;
         this.isDirty = false;
         fs.writeFile(this.filePath, JSON.stringify(this.latestSerialized, null, 2), 'utf8', (err) => {
-            if (err) console.error(`[DeviceStore] Fehler beim Speichern der Geräte:`, err.message);
+            if (err) console.error(`[DeviceStore] Error saving devices:`, err.message);
         });
     }
 
@@ -46,7 +46,7 @@ class DeviceStore {
         try {
             fs.writeFileSync(this.filePath, JSON.stringify(this.latestSerialized, null, 2), 'utf8');
         } catch (e) {
-            console.error(`[DeviceStore] Fehler beim synchronen Speichern:`, e.message);
+            console.error(`[DeviceStore] Error during sync save:`, e.message);
         }
     }
 
@@ -59,7 +59,7 @@ class DeviceStore {
             const data = fs.readFileSync(this.filePath, 'utf8');
             return JSON.parse(data);
         } catch (err) {
-            console.error(`[DeviceStore] Fehler beim Laden der Geräte aus ${this.filePath}:`, err.message);
+            console.error(`[DeviceStore] Error loading devices from ${this.filePath}:`, err.message);
             return [];
         }
     }
@@ -82,7 +82,7 @@ class DeviceStore {
             });
             this.isDirty = true;
         } catch (err) {
-            console.error(`[DeviceStore] Fehler bei Serialisierung der Geräte:`, err.message);
+            console.error(`[DeviceStore] Error serialising devices:`, err.message);
         }
     }
 }

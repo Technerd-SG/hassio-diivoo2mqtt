@@ -1,0 +1,15 @@
+{
+  "valve": "バルブ {ch}",
+  "valve_remaining": "バルブ {ch} 残り時間",
+  "valve_source": "バルブ {ch} ソース",
+  "gateway_led": "ゲートウェイ LED",
+  "gateway_version": "ゲートウェイ バージョン",
+  "gateway_model": "ゲートウェイ モデル",
+  "gateway_button": "ゲートウェイ ボタン",
+  "gateway_portal": "ゲートウェイ ポータルを開く",
+  "gateway_clearwifi": "ゲートウェイ WiFi クリア",
+  "gateway_refresh_version": "ゲートウェイ バージョン更新",
+  "firmware_update": "ファームウェア更新",
+  "valve_rain_delay": "バルブ {ch} 雨天延期",
+  "valve_rain_delay_until": "バルブ {ch} 雨天延期終了日時"
+}

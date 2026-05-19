@@ -1,0 +1,15 @@
+{
+  "valve": "Ventil {ch}",
+  "valve_remaining": "Ventil {ch} Gjenværende tid",
+  "valve_source": "Ventil {ch} Kilde",
+  "gateway_led": "Gateway LED",
+  "gateway_version": "Gateway Versjon",
+  "gateway_model": "Gateway Modell",
+  "gateway_button": "Gateway Knapp",
+  "gateway_portal": "Gateway Åpne portal",
+  "gateway_clearwifi": "Gateway Slett WiFi",
+  "gateway_refresh_version": "Gateway Oppdater versjon",
+  "firmware_update": "Fastvareoppdatering",
+  "valve_rain_delay": "Ventil {ch} Regnforsinkelse",
+  "valve_rain_delay_until": "Ventil {ch} Regnforsinkelse til"
+}

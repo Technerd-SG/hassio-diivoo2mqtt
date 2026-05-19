@@ -33,9 +33,11 @@ options:
   mqtt_port: 1883
   mqtt_username: ""
   mqtt_password: ""
+  language: "en"
 
 schema:
   mqtt_host: str
   mqtt_port: port
   mqtt_username: str
   mqtt_password: password?
+  language: "list(en|de|nl|fr|es|it|pl|pt|sv|nb|da|fi|cs|sk|hu|ro|hr|sl|bg|lt|lv|et|el|tr|ru|uk|zh-Hans|zh-Hant|ja|ko|ar|he|vi|id|ms|th)"

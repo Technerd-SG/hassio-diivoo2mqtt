@@ -12,7 +12,7 @@ class MDnsScanner extends EventEmitter {
     }
 
     start() {
-        console.log('[mDNS] Starte Suche nach Diivoo Gateways (_diivoo._tcp.local)...');
+        console.log('[mDNS] Searching for Diivoo gateways (_diivoo._tcp.local)...');
         this._query();
         // Regelmäßig nachfragen, falls welche später online kommen
         this.scanInterval = setInterval(() => this._query(), 60000);
@@ -82,7 +82,7 @@ class MDnsScanner extends EventEmitter {
             const shortName = serviceName.split('.')[0]; 
 
             if (!this.knownGateways.has(ip)) {
-                console.log(`[mDNS] Neues Gateway gefunden: ${shortName} unter ${ip}:${port}`);
+                console.log(`[mDNS] New gateway found: ${shortName} at ${ip}:${port}`);
                 const gwInfo = { id: shortName, ip, port };
                 this.knownGateways.set(ip, gwInfo);
                 this.emit('gatewayFound', gwInfo);
