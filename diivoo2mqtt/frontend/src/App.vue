@@ -178,7 +178,7 @@
           class="theme-card grid gap-4 rounded-[28px] border p-4"
         >
           <div class="flex flex-wrap items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
-            <div class="min-w-0 flex-1">
+            <div>
               <template v-if="renamingDeviceId === device.valveId">
                 <form class="flex items-center gap-2" @submit.prevent="commitRename(device.valveId)">
                   <input
@@ -196,7 +196,7 @@
                 </div>
               </template>
               <template v-else>
-                <button type="button" class="min-w-0 text-left" @click="toggleDeviceCollapsed(device.valveId)">
+                <button type="button" class="text-left" @click="toggleDeviceCollapsed(device.valveId)">
                   <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
                     {{ device.alias || device.model || 'Irrigation device' }}
                   </strong>
