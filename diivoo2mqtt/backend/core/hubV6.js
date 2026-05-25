@@ -480,12 +480,10 @@ class SmartHub extends EventEmitter {
         const id = Number(valveId);
         if (this.devices.has(id)) {
             console.log(`[SmartHub] Removing device ${id}`);
-
-            // Optional cleanup if necessary
-            // this.devices.get(id).destroy();
-
+            const channelCount = Object.keys(this.devices.get(id).getLiveState().channels).length;
             this.devices.delete(id);
             this.deviceStore.save(this.devices);
+            this.emit('deviceRemoved', { valveId: id, channelCount });
             console.log(`[SmartHub] Device ${id} removed and store updated.`);
         }
     }

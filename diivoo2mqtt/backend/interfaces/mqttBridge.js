@@ -32,6 +32,82 @@ function t(strings, key, vars = {}) {
     return str;
 }
 
+// Single source of truth for every HA entity derived from a channel.
+// Adding a new channel entity here automatically wires it into discovery
+// publishing, custom-name propagation, and discovery cleanup on removal —
+// no other code needs to change.
+const CHANNEL_ENTITIES = [
+    {
+        id: 'valve',
+        domain: 'switch',
+        nameKey: 'valve',
+        nameSuffix: '',
+        extra: (valveId, ch) => ({
+            command_topic: `diivoo/${valveId}/valve/${ch}/set`,
+            value_template: `{{ 'ON' if value_json.channels['${ch}'].isRunning else 'OFF' }}`,
+            payload_on: 'ON',
+            payload_off: 'OFF',
+            icon: 'mdi:water-pump',
+        }),
+    },
+    {
+        id: 'remaining',
+        domain: 'sensor',
+        nameKey: 'valve_remaining',
+        nameSuffix: 'Remaining Time',
+        extra: (valveId, ch) => ({
+            value_template: `{{ value_json.channels['${ch}'].remainingLive }}`,
+            device_class: 'duration',
+            unit_of_measurement: 's',
+        }),
+    },
+    {
+        id: 'source',
+        domain: 'sensor',
+        nameKey: 'valve_source',
+        nameSuffix: 'Source',
+        extra: (valveId, ch) => ({
+            value_template: `{{ value_json.channels['${ch}'].source }}`,
+            icon: 'mdi:information-outline',
+            entity_category: 'diagnostic',
+        }),
+    },
+    {
+        id: 'rain_delay',
+        domain: 'number',
+        nameKey: 'valve_rain_delay',
+        nameSuffix: 'Rain Delay',
+        extra: (valveId, ch) => ({
+            value_template: `{{ value_json.channels['${ch}'].rainDelayHours }}`,
+            command_topic: `diivoo/${valveId}/ch/${ch}/rain_delay/set`,
+            min: 0,
+            max: 168,
+            step: 1,
+            unit_of_measurement: 'h',
+            icon: 'mdi:weather-rainy',
+        }),
+    },
+    {
+        id: 'rain_delay_until',
+        domain: 'sensor',
+        nameKey: 'valve_rain_delay_until',
+        nameSuffix: 'Rain Delay Until',
+        extra: (valveId, ch) => ({
+            value_template: `{{ value_json.channels['${ch}'].rainDelayUntil }}`,
+            icon: 'mdi:calendar-clock',
+            entity_category: 'diagnostic',
+        }),
+    },
+];
+
+function channelEntityObjectId(valveId, ch, entityId) {
+    return entityId === 'valve' ? `${valveId}_ch${ch}` : `${valveId}_ch${ch}_${entityId}`;
+}
+
+function channelEntityUniqueId(valveId, ch, entityId) {
+    return `diivoo_${valveId}_${entityId}_${ch}`;
+}
+
 class MqttBridge {
     constructor(hub, config) {
         this.hub = hub;
@@ -80,6 +156,10 @@ class MqttBridge {
             if (!device) return;
             this.discoveredValves.delete(valveId);
             this.publishAutoDiscovery(device.getLiveState());
+        });
+        this.hub.on('deviceRemoved', ({ valveId, channelCount }) => {
+            this._clearValveDiscovery(valveId, channelCount);
+            this.discoveredValves.delete(valveId);
         });
 
         // Gateway-Updates
@@ -179,6 +259,26 @@ class MqttBridge {
         this.client.publish(topic, payload, options);
     }
 
+    _channelEntityName(entity, ch, customChannelName) {
+        if (customChannelName) {
+            return entity.nameSuffix ? `${customChannelName} ${entity.nameSuffix}` : customChannelName;
+        }
+        return t(this.strings, entity.nameKey, { ch });
+    }
+
+    _publishChannelEntity(entity, valveId, ch, stateTopic, deviceBase, customChannelName) {
+        this._publish(
+            `${this.discoveryPrefix}/${entity.domain}/${channelEntityObjectId(valveId, ch, entity.id)}/config`,
+            JSON.stringify({
+                name: this._channelEntityName(entity, ch, customChannelName),
+                unique_id: channelEntityUniqueId(valveId, ch, entity.id),
+                state_topic: stateTopic,
+                ...entity.extra(valveId, ch),
+                device: deviceBase
+            })
+        );
+    }
+
     _publishValveCommandResult(valveId, channelId, result) {
         this._publish(
             `diivoo/${valveId}/valve/${channelId}/command_result`,
@@ -256,84 +356,12 @@ class MqttBridge {
                 ? deviceLiveState.channels[ch].displayName.trim()
                 : '';
 
-            // Ventil
-            this._publish(
-                `${discoveryPrefix}/switch/${valveId}_ch${ch}/config`,
-                JSON.stringify({
-                    name: customChannelName || t(this.strings, 'valve', { ch }),
-                    unique_id: `diivoo_${valveId}_valve_${ch}`,
-                    state_topic: stateTopic,
-                    command_topic: `diivoo/${valveId}/valve/${ch}/set`,
-                    value_template: `{{ 'ON' if value_json.channels['${ch}'].isRunning else 'OFF' }}`,
-                    payload_on: 'ON',
-                    payload_off: 'OFF',
-                    icon: 'mdi:water-pump',
-                    device: deviceBase
-                })
-            );
-
-            // Restzeit
-            this._publish(
-                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_remaining/config`,
-                JSON.stringify({
-                    name: t(this.strings, 'valve_remaining', { ch }),
-                    unique_id: `diivoo_${valveId}_remaining_${ch}`,
-                    state_topic: stateTopic,
-                    value_template: `{{ value_json.channels['${ch}'].remainingLive }}`,
-                    device_class: 'duration',
-                    unit_of_measurement: 's',
-                    device: deviceBase
-                })
-            );
-
-            // Quelle
-            this._publish(
-                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_source/config`,
-                JSON.stringify({
-                    name: t(this.strings, 'valve_source', { ch }),
-                    unique_id: `diivoo_${valveId}_source_${ch}`,
-                    state_topic: stateTopic,
-                    value_template: `{{ value_json.channels['${ch}'].source }}`,
-                    icon: 'mdi:information-outline',
-                    entity_category: 'diagnostic',
-                    device: deviceBase
-                })
-            );
-
             // Remove old select entity if it exists
             this._publish(`${discoveryPrefix}/select/${valveId}_ch${ch}_rain_delay/config`, '', { retain: true });
 
-            // Rain Delay (hours, 0 = off)
-            this._publish(
-                `${discoveryPrefix}/number/${valveId}_ch${ch}_rain_delay/config`,
-                JSON.stringify({
-                    name: t(this.strings, 'valve_rain_delay', { ch }),
-                    unique_id: `diivoo_${valveId}_rain_delay_${ch}`,
-                    state_topic: stateTopic,
-                    value_template: `{{ value_json.channels['${ch}'].rainDelayHours }}`,
-                    command_topic: `diivoo/${valveId}/ch/${ch}/rain_delay/set`,
-                    min: 0,
-                    max: 168,
-                    step: 1,
-                    unit_of_measurement: 'h',
-                    icon: 'mdi:weather-rainy',
-                    device: deviceBase
-                })
-            );
-
-            // Rain Delay expiry sensor (shows actual end datetime or 'Off')
-            this._publish(
-                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_rain_delay_until/config`,
-                JSON.stringify({
-                    name: t(this.strings, 'valve_rain_delay_until', { ch }),
-                    unique_id: `diivoo_${valveId}_rain_delay_until_${ch}`,
-                    state_topic: stateTopic,
-                    value_template: `{{ value_json.channels['${ch}'].rainDelayUntil }}`,
-                    icon: 'mdi:calendar-clock',
-                    entity_category: 'diagnostic',
-                    device: deviceBase
-                })
-            );
+            for (const entity of CHANNEL_ENTITIES) {
+                this._publishChannelEntity(entity, valveId, ch, stateTopic, deviceBase, customChannelName);
+            }
         }
     }
 
@@ -611,6 +639,17 @@ class MqttBridge {
         this.discoveredGateways.delete(previousGatewayId);
 
         console.log(`[MQTT] Gateway identity migrated: ${previousGatewayId} -> ${gatewayId}`);
+    }
+
+    _clearValveDiscovery(valveId, channelCount) {
+        const p = this.discoveryPrefix;
+        this._publish(`${p}/sensor/${valveId}_battery/config`, '', { retain: true });
+        this._publish(`${p}/binary_sensor/${valveId}_online/config`, '', { retain: true });
+        for (let ch = 1; ch <= channelCount; ch++) {
+            for (const entity of CHANNEL_ENTITIES) {
+                this._publish(`${p}/${entity.domain}/${channelEntityObjectId(valveId, ch, entity.id)}/config`, '', { retain: true });
+            }
+        }
     }
 
     handleGatewayButton(ev) {
