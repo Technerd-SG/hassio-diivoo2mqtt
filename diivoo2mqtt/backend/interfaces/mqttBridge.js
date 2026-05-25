@@ -151,15 +151,13 @@ class MqttBridge {
 
         if (parsed && typeof parsed === 'object') {
             const state = String(parsed.state || '').toUpperCase();
-            if (state === 'ON' || state === 'OFF') {
-                return state;
-            }
+            if (state === 'ON' || state === 'OPEN') return 'ON';
+            if (state === 'OFF' || state === 'CLOSE') return 'OFF';
         }
 
         const upper = raw.toUpperCase();
-        if (upper === 'ON' || upper === 'OFF') {
-            return upper;
-        }
+        if (upper === 'ON' || upper === 'OPEN') return 'ON';
+        if (upper === 'OFF' || upper === 'CLOSE') return 'OFF';
 
         return null;
     }
@@ -257,16 +255,19 @@ class MqttBridge {
                 : '';
 
             // Ventil
+            this._publish(`${discoveryPrefix}/switch/${valveId}_ch${ch}/config`, '', { retain: true });
             this._publish(
-                `${discoveryPrefix}/switch/${valveId}_ch${ch}/config`,
+                `${discoveryPrefix}/valve/${valveId}_ch${ch}/config`,
                 JSON.stringify({
                     name: customChannelName || t(this.strings, 'valve', { ch }),
                     unique_id: `diivoo_${valveId}_valve_${ch}`,
                     state_topic: stateTopic,
                     command_topic: `diivoo/${valveId}/valve/${ch}/set`,
-                    value_template: `{{ 'ON' if value_json.channels['${ch}'].isRunning else 'OFF' }}`,
-                    payload_on: 'ON',
-                    payload_off: 'OFF',
+                    value_template: `{{ 'open' if value_json.channels['${ch}'].isRunning else 'closed' }}`,
+                    state_open: 'open',
+                    state_closed: 'closed',
+                    payload_open: 'OPEN',
+                    payload_close: 'CLOSE',
                     icon: 'mdi:water-pump',
                     device: deviceBase
                 })
@@ -737,14 +738,16 @@ class MqttBridge {
                 let result = null;
 
                 if (parsed && typeof parsed === 'object' && parsed.state) {
-                    requestedState = String(parsed.state).toUpperCase();
-                    if (requestedState === 'ON') {
+                    const parsedState = String(parsed.state).toUpperCase();
+                    if (parsedState === 'ON' || parsedState === 'OPEN') {
+                        requestedState = 'ON';
                         const duration = this._normalizeDurationSeconds(parsed.duration, defaultDuration);
                         result = await device.valve(channelId).on(duration);
-                    } else if (requestedState === 'OFF') {
+                    } else if (parsedState === 'OFF' || parsedState === 'CLOSE') {
+                        requestedState = 'OFF';
                         result = await device.valve(channelId).off();
                     } else {
-                        throw new Error(`Unsupported valve state '${requestedState}'`);
+                        throw new Error(`Unsupported valve state '${parsedState}'`);
                     }
                 } else if (simpleState === 'ON') {
                     requestedState = 'ON';
