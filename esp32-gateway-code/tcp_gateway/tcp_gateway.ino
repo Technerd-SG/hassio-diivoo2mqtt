@@ -13,7 +13,7 @@
 // ============================================================
 // Firmware Verision
 // ============================================================
-constexpr char FW_VERSION[] = "0.1.10";
+constexpr char FW_VERSION[] = "0.1.11";
 constexpr char FW_MODEL[]   = "tcp_gateway_WG03";
 
 // ============================================================
@@ -749,8 +749,8 @@ void startMdnsResponder() {
 
     MDNS.addServiceTxt("diivoo", "tcp", "model", FW_MODEL);
     MDNS.addServiceTxt("diivoo", "tcp", "version", FW_VERSION);
-    MDNS.addServiceTxt("diivoo", "tcp", "mac", macHex);
-    MDNS.addServiceTxt("diivoo", "tcp", "mac_colon", macColon);
+    MDNS.addServiceTxt("diivoo", "tcp", "mac", static_cast<const char*>(macHex));
+    MDNS.addServiceTxt("diivoo", "tcp", "mac_colon", static_cast<const char*>(macColon));
   } else {
     mdnsResponderStarted = false;
     Serial.println("[mDNS] Failed to start mDNS responder!");
