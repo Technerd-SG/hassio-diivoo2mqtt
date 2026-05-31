@@ -114,11 +114,12 @@ function encodeTimeBlock6(date = new Date(), contextByte = 0x02, extraFlagsT5 = 
   return [t0, t1, t2, t3, t4, t5];
 }
 
-const SHORT_DAY_TO_BIT = { 'So': 0x01, 'Mo': 0x02, 'Di': 0x04, 'Mi': 0x08, 'Do': 0x10, 'Fr': 0x20, 'Sa': 0x40 };
+// index 1–7 = Mon–Sun, matching the numeric weekday values stored in schedules
+const WEEKDAY_BITS = [0, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x01];
 function encodePlanBlock(plan) {
   let statusByte = plan.enabled ? 0x80 : 0x00;
   if ((plan.modeCode & 0x03) === 3 && Array.isArray(plan.activeDays)) {
-      plan.activeDays.forEach(day => { if (SHORT_DAY_TO_BIT[day]) statusByte |= SHORT_DAY_TO_BIT[day]; });
+      plan.activeDays.forEach(day => { statusByte |= WEEKDAY_BITS[day] || 0; });
   }
   const minute = plan.minute & 0x3F;
   const b1 = minute | ((plan.hour & 0x03) << 6);
