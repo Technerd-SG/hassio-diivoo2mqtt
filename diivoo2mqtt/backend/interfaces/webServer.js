@@ -126,19 +126,7 @@ class WebServer {
             }
 
             // Gateways Status mitsenden
-            const gws = [];
-            for (const gw of this.hub.gateways.values()) {
-                gws.push({
-                    id: gw.id,
-                    ip: gw.ip,
-                    port: gw.port,
-                    isConnected: gw.isConnected,
-                    version: gw.lastVersion?.version || null,
-                    model: gw.lastVersion?.model || null,
-                    lastSeenAt: gw.lastSeenAt,
-                    otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
-                });
-            }
+            const gws = Array.from(this.hub.gateways.values()).map(gw => this._serializeGateway(gw));
             socket.emit('gatewaysState', gws);
 
             socket.on('app:ping', (payload, ack) => {
@@ -216,9 +204,54 @@ class WebServer {
                 }
             });
 
-            socket.on('removeManualGateway', ({ id }) => {
+            socket.on('removeGateway', ({ id }) => {
                 if (this.hub && typeof this.hub._removeDynamicGateway === 'function') {
                     this.hub._removeDynamicGateway(id);
+                }
+            });
+
+            socket.on('renameGateway', ({ gatewayId, alias }) => {
+                if (this.hub) {
+                    this.hub.renameGateway(gatewayId, alias);
+                }
+            });
+
+            socket.on('gatewayPortal', ({ gatewayId }) => {
+                if (this.hub) {
+                    this.hub.startGatewayPortal(gatewayId).catch(err => {
+                        console.error(`[Web] Portal command failed (${gatewayId}): ${err.message}`);
+                    });
+                }
+            });
+
+            socket.on('gatewayClearWifi', ({ gatewayId }) => {
+                if (this.hub) {
+                    this.hub.clearGatewayWifi(gatewayId).catch(err => {
+                        console.error(`[Web] ClearWifi command failed (${gatewayId}): ${err.message}`);
+                    });
+                }
+            });
+
+            socket.on('gatewayRefreshVersion', ({ gatewayId }) => {
+                if (this.hub) {
+                    console.log(`[Web] Refresh version requested for gateway ${gatewayId}`);
+                    this.hub.getGatewayVersion(gatewayId).catch(err => {
+                        console.error(`[Web] RefreshVersion command failed (${gatewayId}): ${err.message}`);
+                    });
+                }
+            });
+
+            socket.on('gatewaySetLed', ({ gatewayId, state }) => {
+                if (this.hub) {
+                    this.hub.setGatewayLed(gatewayId, state === 'ON').then(() => {
+                        const gw = this.hub.getGateway(gatewayId);
+                        if (gw) {
+                            gw.ledState = state;
+                            this.hub.emit('gatewayStateUpdate');
+                        }
+                    }).catch(err => {
+                        console.error(`[Web] SetLed command failed (${gatewayId}): ${err.message}`);
+                    });
                 }
             });
 
@@ -563,19 +596,7 @@ class WebServer {
         });
 
         this.hub.on('gatewayStateUpdate', () => {
-            const gws = [];
-            for (const gw of this.hub.gateways.values()) {
-                gws.push({
-                    id: gw.id,
-                    ip: gw.ip,
-                    port: gw.port,
-                    isConnected: gw.isConnected,
-                    version: gw.lastVersion?.version || null,
-                    model: gw.lastVersion?.model || null,
-                    lastSeenAt: gw.lastSeenAt,
-                    otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
-                });
-            }
+            const gws = Array.from(this.hub.gateways.values()).map(gw => this._serializeGateway(gw));
             this.io.emit('gatewaysState', gws);
         });
 
@@ -584,6 +605,22 @@ class WebServer {
         this.server.listen(config.port, '0.0.0.0', () => {
             console.log(`[Web] Frontend running on port ${config.port}`);
         });
+    }
+
+    _serializeGateway(gw) {
+        return {
+            id: gw.id,
+            alias: gw.alias || null,
+            ip: gw.ip,
+            port: gw.port,
+            isConnected: gw.isConnected,
+            ledState: gw.ledState || 'OFF',
+            buttonPressed: !!gw.buttonPressed,
+            version: gw.lastVersion?.version || null,
+            model: gw.lastVersion?.model || null,
+            lastSeenAt: gw.lastSeenAt,
+            otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
+        };
     }
 
     _getChannelOrThrow(device, channelId) {

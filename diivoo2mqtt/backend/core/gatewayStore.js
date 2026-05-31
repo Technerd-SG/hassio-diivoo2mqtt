@@ -27,7 +27,13 @@ class GatewayStore {
 
         try {
             const data = fs.readFileSync(this.filePath, 'utf8');
-            return JSON.parse(data);
+            const parsed = JSON.parse(data);
+            // Deduplicate by id — last entry wins if the file has been corrupted with duplicates
+            const seen = new Map();
+            for (const gw of parsed) {
+                if (gw.id) seen.set(gw.id, gw);
+            }
+            return Array.from(seen.values());
         } catch (err) {
             console.error(`[GatewayStore] Error loading gateways from ${this.filePath}:`, err.message);
             return [];
@@ -37,14 +43,12 @@ class GatewayStore {
     save(gatewaysMap) {
         try {
             const serialized = Array.from(gatewaysMap.values())
-                .filter(gw => gw.id.startsWith('manual-')) // Nur manuell hinzugefügte Gateways speichern
-                .map(gw => {
-                    return {
-                        id: gw.id,
-                        ip: gw.ip,
-                        port: gw.port
-                    };
-                });
+                .map(gw => ({
+                    id: gw.id,
+                    ip: gw.ip,
+                    port: gw.port,
+                    ...(gw.alias ? { alias: gw.alias } : {})
+                }));
 
             fs.writeFile(this.filePath, JSON.stringify(serialized, null, 2), 'utf8', (err) => {
                 if (err) console.error(`[GatewayStore] Error saving gateways to ${this.filePath}:`, err.message);

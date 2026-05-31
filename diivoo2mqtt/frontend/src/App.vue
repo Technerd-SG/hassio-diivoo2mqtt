@@ -72,16 +72,36 @@
           :key="gw.id"
           class="theme-card grid gap-4 rounded-[28px] border p-4"
         >
+          <!-- Header row -->
           <div class="flex flex-wrap items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
+            <!-- Title / rename form -->
             <div>
-              <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
-                Gateway {{ gw.id }}
-              </strong>
-              <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
-                {{ gw.model || 'Unknown Model' }} · {{ gw.ip }}:{{ gw.port }}
-              </div>
+              <template v-if="renamingGatewayId === gw.id">
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model="renameGatewayInput"
+                    class="theme-input rounded-xl border px-3 py-1 text-[18px] font-bold leading-[1.1] tracking-[-0.03em] bg-transparent"
+                    @keyup.enter="commitGatewayRename(gw.id)"
+                    @keyup.escape="cancelGatewayRename"
+                  />
+                  <button type="button" class="theme-button-primary rounded-full border px-3 py-1 text-[13px] font-bold transition hover:-translate-y-[1px]" @click="commitGatewayRename(gw.id)">Save</button>
+                  <button type="button" class="theme-button-secondary rounded-full border px-3 py-1 text-[13px] font-bold transition hover:-translate-y-[1px]" @click="cancelGatewayRename">Cancel</button>
+                </div>
+              </template>
+              <template v-else>
+                <button type="button" class="text-left" @click="toggleGatewayCollapsed(gw.id)">
+                  <strong class="block text-[22px] leading-[1.1] tracking-[-0.03em]">
+                    {{ gw.alias || gw.id }}
+                  </strong>
+                  <div class="theme-text-muted mt-1.5 text-sm leading-[1.4]">
+                    {{ gw.model || 'Unknown Model' }} · {{ gw.ip }}:{{ gw.port }}
+                    <span class="ml-2">{{ isGatewayCollapsed(gw.id) ? '▼ expand' : '▲ collapse' }}</span>
+                  </div>
+                </button>
+              </template>
             </div>
-            
+
+            <!-- Status chips + action buttons -->
             <div class="flex flex-wrap gap-2 max-md:w-full">
               <div
                 class="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center"
@@ -104,12 +124,77 @@
                 Update to {{ gw.otaUpdate.latestVersion }}
               </button>
               <button
-                v-if="gw.id.startsWith('manual-')"
+                type="button"
+                class="theme-button-secondary inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center transition hover:-translate-y-[1px]"
+                @click="startGatewayRename(gw)"
+              >
+                Rename
+              </button>
+              <button
                 @click="removeGateway(gw.id)"
                 class="theme-button-danger inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center transition hover:-translate-y-[1px]"
               >
                 Delete
               </button>
+            </div>
+          </div>
+
+          <!-- Expanded controls -->
+          <div v-if="!isGatewayCollapsed(gw.id)" class="grid gap-3">
+            <!-- Entity row -->
+            <div class="theme-subtle grid gap-3 rounded-[22px] border p-[15px]">
+              <div class="flex flex-wrap gap-2 items-center">
+
+                <!-- Button state -->
+                <div
+                  class="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-bold"
+                  :class="gw.buttonPressed ? 'theme-chip-warning' : 'theme-chip-neutral'"
+                >
+                  Button: {{ gw.buttonPressed ? 'Pressed' : 'Released' }}
+                </div>
+
+                <!-- LED toggle -->
+                <button
+                  type="button"
+                  :disabled="!gw.isConnected"
+                  class="inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold transition hover:-translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  :class="gw.ledState === 'ON' ? 'theme-chip-success' : 'theme-chip-neutral'"
+                  @click="gatewaySetLed(gw.id, gw.ledState === 'ON' ? 'OFF' : 'ON')"
+                >
+                  LED: {{ gw.ledState === 'ON' ? 'On' : 'Off' }}
+                </button>
+
+                <!-- Portal -->
+                <button
+                  type="button"
+                  :disabled="!gw.isConnected"
+                  class="theme-button-secondary inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold transition hover:-translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  @click="gatewayPortal(gw.id)"
+                >
+                  Open Portal
+                </button>
+
+                <!-- Refresh version -->
+                <button
+                  type="button"
+                  :disabled="!gw.isConnected"
+                  class="theme-button-secondary inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold transition hover:-translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  @click="gatewayRefreshVersion(gw.id)"
+                >
+                  Refresh Version
+                </button>
+
+                <!-- Clear WiFi -->
+                <button
+                  type="button"
+                  :disabled="!gw.isConnected"
+                  class="theme-button-danger inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold transition hover:-translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  @click="gatewayClearWifi(gw.id)"
+                >
+                  Clear WiFi
+                </button>
+
+              </div>
             </div>
           </div>
         </article>
@@ -746,6 +831,10 @@ const collapsedDevices = ref(new Set())
 const renamingDeviceId = ref(null)
 const renameInput = ref('')
 
+const collapsedGateways = ref(new Set())
+const renamingGatewayId = ref(null)
+const renameGatewayInput = ref('')
+
 const planDraft = reactive({
   mode: 'normal',
   repeat: 'daily',
@@ -1228,6 +1317,56 @@ function toggleDeviceCollapsed(valveId) {
   collapsedDevices.value = next
 }
 
+function isGatewayCollapsed(id) {
+  return collapsedGateways.value.has(id)
+}
+
+function toggleGatewayCollapsed(id) {
+  const next = new Set(collapsedGateways.value)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
+  collapsedGateways.value = next
+}
+
+function startGatewayRename(gw) {
+  renamingGatewayId.value = gw.id
+  renameGatewayInput.value = gw.alias || ''
+}
+
+function cancelGatewayRename() {
+  renamingGatewayId.value = null
+  renameGatewayInput.value = ''
+}
+
+function commitGatewayRename(gatewayId) {
+  socket.emit('renameGateway', { gatewayId, alias: renameGatewayInput.value })
+  renamingGatewayId.value = null
+  renameGatewayInput.value = ''
+}
+
+function gatewayPortal(gatewayId) {
+  if (confirm(`Open WiFi config portal on gateway ${gatewayId}? It will disconnect briefly.`)) {
+    socket.emit('gatewayPortal', { gatewayId })
+  }
+}
+
+function gatewayClearWifi(gatewayId) {
+  if (confirm(`Clear WiFi credentials on gateway ${gatewayId}? It will go offline until reconfigured.`)) {
+    socket.emit('gatewayClearWifi', { gatewayId })
+  }
+}
+
+function gatewayRefreshVersion(gatewayId) {
+  socket.emit('gatewayRefreshVersion', { gatewayId })
+}
+
+function gatewaySetLed(gatewayId, state) {
+  socket.emit('gatewaySetLed', { gatewayId, state })
+}
+
 function togglePairing() {
   if (pairingBusy.value) return
 
@@ -1442,8 +1581,8 @@ function addManualGateway() {
 }
 
 function removeGateway(id) {
-  if (confirm(`Do you really want to remove the manual gateway ${id}?`)) {
-    socket.emit('removeManualGateway', { id })
+  if (confirm(`Do you really want to remove gateway ${id}?`)) {
+    socket.emit('removeGateway', { id })
   }
 }
 
@@ -1639,7 +1778,17 @@ onMounted(async () => {
   socket.on('deviceUpdate', handleDeviceUpdate)
   socket.on('pairingState', handlePairingState)
   socket.on('channelConfigState', handleChannelConfigState)
-  socket.on('gatewaysState', (gws) => { gateways.value = Array.isArray(gws) ? gws : [] })
+  socket.on('gatewaysState', (gws) => {
+    const list = Array.isArray(gws) ? gws : []
+    // Collapse any newly seen gateways by default
+    const next = new Set(collapsedGateways.value)
+    const existing = new Set(gateways.value.map(g => g.id))
+    for (const gw of list) {
+      if (!existing.has(gw.id)) next.add(gw.id)
+    }
+    collapsedGateways.value = next
+    gateways.value = list
+  })
   socket.on('diagnosticLogs', handleDiagnosticLogs)
 
   intervalId = window.setInterval(() => {

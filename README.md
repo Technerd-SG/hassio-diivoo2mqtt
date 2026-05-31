@@ -32,7 +32,7 @@ This isn't a stripped-down hack. It replicates the full feature set of the origi
 - **Multi-language support** – entity names and UI adapt to your Home Assistant language (30+ locales supported)
 - **Auto-discovery** – your valves show up in Home Assistant as switches via MQTT, no manual YAML needed
 - **OTA firmware updates** – update your gateway firmware from the HA UI with one click (after the initial USB flash)
-- **Automatic gateway discovery** – flashed gateways announce themselves via mDNS and just show up
+- **Automatic gateway discovery** – flashed gateways announce themselves via mDNS and just show up; discovered gateways are persisted so the connection re-establishes after an add-on restart without needing an ESP32 reboot
 - **Device renaming** – rename valves from the web UI; the new name syncs to Home Assistant immediately without losing entity history
 - **Built-in web UI** via Ingress – manage gateways, see device states, trigger diagnostics
 - **WiFi setup portal** on the gateway itself – if the ESP32 can't connect, it opens an AP with a captive portal to configure credentials
