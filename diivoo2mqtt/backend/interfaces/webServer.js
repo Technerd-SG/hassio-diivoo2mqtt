@@ -216,7 +216,7 @@ class WebServer {
                 }
             });
 
-            socket.on('removeManualGateway', ({ id }) => {
+            socket.on('removeGateway', ({ id }) => {
                 if (this.hub && typeof this.hub._removeDynamicGateway === 'function') {
                     this.hub._removeDynamicGateway(id);
                 }

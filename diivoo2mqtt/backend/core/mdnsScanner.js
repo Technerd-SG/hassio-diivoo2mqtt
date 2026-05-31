@@ -26,6 +26,10 @@ class MDnsScanner extends EventEmitter {
         mdns.destroy();
     }
 
+    forgetGateway(ip) {
+        this.knownGateways.delete(ip);
+    }
+
     _query() {
         mdns.query({
             questions: [{

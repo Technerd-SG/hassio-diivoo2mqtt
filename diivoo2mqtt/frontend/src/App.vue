@@ -104,7 +104,6 @@
                 Update to {{ gw.otaUpdate.latestVersion }}
               </button>
               <button
-                v-if="gw.id.startsWith('manual-')"
                 @click="removeGateway(gw.id)"
                 class="theme-button-danger inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center transition hover:-translate-y-[1px]"
               >
@@ -1442,8 +1441,8 @@ function addManualGateway() {
 }
 
 function removeGateway(id) {
-  if (confirm(`Do you really want to remove the manual gateway ${id}?`)) {
-    socket.emit('removeManualGateway', { id })
+  if (confirm(`Do you really want to remove gateway ${id}?`)) {
+    socket.emit('removeGateway', { id })
   }
 }
 
