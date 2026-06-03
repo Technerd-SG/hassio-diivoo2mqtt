@@ -1,4 +1,14 @@
 // backend/index.js
+['log', 'warn', 'error'].forEach((method) => {
+    const orig = console[method].bind(console);
+    console[method] = (...args) => {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const ts = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        orig(`[${ts}]`, ...args);
+    };
+});
+
 const SmartHub = require('./core/hubV6');
 const MqttBridge = require('./interfaces/mqttBridge');
 const WebServer = require('./interfaces/webServer');
