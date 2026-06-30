@@ -639,13 +639,17 @@ class MqttBridge {
             const device = this.hub.devices.get(valveId);
             if (!device) return;
 
+            const channel = device.channels?.[channelId];
+            if (!channel) return;
+
+            const durationSeconds = (channel.settings?.durationSeconds ? channel.settings.durationSeconds : 600);
             const parsed = this._safeJsonParse(raw);
             const simpleState = this._extractOnOff(raw);
 
             try {
                 if (parsed && typeof parsed === 'object' && parsed.state) {
                     if (String(parsed.state).toUpperCase() === 'ON') {
-                        const duration = parsed.duration || 600;
+                        const duration = parsed.duration || durationSeconds;
                         await device.valve(channelId).on(duration);
                     } else if (String(parsed.state).toUpperCase() === 'OFF') {
                         await device.valve(channelId).off();
@@ -654,7 +658,7 @@ class MqttBridge {
                 }
 
                 if (simpleState === 'ON') {
-                    await device.valve(channelId).on(600);
+                    await device.valve(channelId).on(durationSeconds);
                 } else if (simpleState === 'OFF') {
                     await device.valve(channelId).off();
                 }
