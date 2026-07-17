@@ -36,7 +36,10 @@ class DeviceStore {
         if (!this.isDirty || !this.latestSerialized) return;
         this.isDirty = false;
         fs.writeFile(this.filePath, JSON.stringify(this.latestSerialized, null, 2), 'utf8', (err) => {
-            if (err) console.error(`[DeviceStore] Error saving devices:`, err.message);
+            if (err) {
+                this.isDirty = true;
+                console.error(`[DeviceStore] Error saving devices:`, err.message);
+            }
         });
     }
 
@@ -46,6 +49,7 @@ class DeviceStore {
         try {
             fs.writeFileSync(this.filePath, JSON.stringify(this.latestSerialized, null, 2), 'utf8');
         } catch (e) {
+            this.isDirty = true;
             console.error(`[DeviceStore] Error during sync save:`, e.message);
         }
     }
