@@ -20,6 +20,34 @@ test('channel display names are exposed in live state', () => {
     assert.equal(device.getLiveState().channels[1].displayName, 'Tomatoes');
 });
 
+test('marks a device unreachable after command failure and restores it on the next packet', () => {
+    const device = createDevice();
+    const updates = [];
+    device.on('stateUpdate', (update) => updates.push(update));
+    device.lastSeen = Date.now() - 1000;
+
+    device._markCommandFailure(new Error('simulated command timeout'));
+
+    assert.equal(device.isOnline, false);
+    assert.equal(updates.at(-1).reason, 'COMMAND_UNREACHABLE');
+    assert.equal(updates.at(-1).state.isOnline, false);
+
+    device.handleIncomingPacket(1, 0xA0, [], 'A0', 'gw-test', -50);
+
+    assert.equal(device.isOnline, true);
+    assert.equal(device.lastCommandFailureAt, 0);
+    assert.equal(updates.at(-1).reason, 'COMMAND_REACHABLE');
+    assert.equal(updates.at(-1).state.isOnline, true);
+});
+
+test('queue contention alone does not mark a device unreachable', () => {
+    const device = createDevice();
+
+    assert.equal(device._shouldMarkCommandFailure({ code: 'ACQUIRE_TIMEOUT' }), false);
+    assert.equal(device._shouldMarkCommandFailure({ code: 'QUEUE_OVERFLOW' }), false);
+    assert.equal(device._shouldMarkCommandFailure({ code: 'EXECUTION_TIMEOUT' }), true);
+});
+
 test('action response matcher accepts only acknowledgements with matching sequence and state', () => {
     const device = createDevice();
     const runningPayload = new Array(13).fill(0);
