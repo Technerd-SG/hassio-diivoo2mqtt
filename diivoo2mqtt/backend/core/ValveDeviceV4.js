@@ -60,6 +60,7 @@ class ValveDevice extends EventEmitter {
         this.trys_refresh_trigger = 0;
         this.configRefreshQueue = Promise.resolve();
         this.activeConfigRefresh = null;
+        this.configRefreshPending = 0;
 
         // Kanalstatus
         this.channels = {};
@@ -854,23 +855,44 @@ class ValveDevice extends EventEmitter {
         return this.sendHubPacket(seq, 0x86, payload, 'Empty schedule (0x86)', this.getDownlinkChannel(), this.getDefaultListenChannel());
     }
 
+    _emitConfigSyncState(status, tracker = null, extra = {}) {
+        this.emit('configSyncState', {
+            valveId: this.valveId,
+            status,
+            reason: tracker?.reason || extra.reason || null,
+            pending: this.configRefreshPending,
+            requestCount: tracker?.requestCount || 0,
+            lastCommand: tracker?.lastCommand ?? null,
+            confirmed: false,
+            ts: Date.now(),
+            ...extra,
+        });
+    }
+
     _markConfigPullActivity(command) {
         if (!this.activeConfigRefresh) return;
 
         this.activeConfigRefresh.lastActivityAt = Date.now();
         this.activeConfigRefresh.requestCount++;
         this.activeConfigRefresh.lastCommand = command;
+        this._emitConfigSyncState('pulling', this.activeConfigRefresh);
     }
 
     queueConfigRefresh(reason = 'config-change', options = {}) {
+        this.configRefreshPending++;
+        this._emitConfigSyncState('queued', null, { reason });
+
         const task = this.configRefreshQueue
             .catch(() => {})
             .then(() => this._runConfigRefresh(reason, options));
+        const trackedTask = task.finally(() => {
+            this.configRefreshPending = Math.max(0, this.configRefreshPending - 1);
+        });
 
         // Keep the queue usable after a failed refresh while returning the
         // original task (including its error) to the caller.
-        this.configRefreshQueue = task.catch(() => {});
-        return task;
+        this.configRefreshQueue = trackedTask.catch(() => {});
+        return trackedTask;
     }
 
     async _runConfigRefresh(reason, options = {}) {
@@ -892,12 +914,14 @@ class ValveDevice extends EventEmitter {
         };
 
         this.activeConfigRefresh = tracker;
+        this._emitConfigSyncState('notifying', tracker);
         console.log(`[Device ${this.valveId}] Starting serialized config refresh (${reason}).`);
 
         try {
             const followUps = await this.sendPingTrigger(null, maxRetransmits, 0x03);
 
             if ((!Array.isArray(followUps) || followUps.length === 0) && tracker.requestCount === 0) {
+                this._emitConfigSyncState('no_response', tracker);
                 return followUps;
             }
 
@@ -909,9 +933,10 @@ class ValveDevice extends EventEmitter {
                 const idleMs = Date.now() - tracker.lastActivityAt;
                 if (idleMs >= quietMs) {
                     console.log(
-                        `[Device ${this.valveId}] Config refresh complete after ` +
+                        `[Device ${this.valveId}] Config pull became idle after ` +
                         `${tracker.requestCount} request(s) (${reason}).`
                     );
+                    this._emitConfigSyncState('idle', tracker);
                     return followUps;
                 }
 
@@ -922,7 +947,11 @@ class ValveDevice extends EventEmitter {
                 `[Device ${this.valveId}] Config refresh wait limit reached after ` +
                 `${tracker.requestCount} request(s) (${reason}).`
             );
+            this._emitConfigSyncState('timeout', tracker);
             return followUps;
+        } catch (err) {
+            this._emitConfigSyncState('failed', tracker, { error: err.message });
+            throw err;
         } finally {
             if (this.activeConfigRefresh === tracker) {
                 this.activeConfigRefresh = null;

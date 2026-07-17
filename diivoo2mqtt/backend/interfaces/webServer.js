@@ -580,6 +580,10 @@ class WebServer {
             this.io.emit('deviceUpdate', updateData.state);
         });
 
+        this.hub.on('configSyncState', (state) => {
+            this.io.emit('configSyncState', state);
+        });
+
         this.hub.on('gatewayStateUpdate', () => {
             const gws = [];
             for (const gw of this.hub.gateways.values()) {
