@@ -95,6 +95,8 @@ test('does not resolve an action when its ACK reports the wrong state', () => {
 
 test('serializes config refresh triggers for the same device', async () => {
     const device = createDevice();
+    const states = [];
+    device.on('configSyncState', (state) => states.push(state));
     let active = 0;
     let maxActive = 0;
     let calls = 0;
@@ -117,10 +119,16 @@ test('serializes config refresh triggers for the same device', async () => {
     assert.equal(calls, 2);
     assert.equal(maxActive, 1);
     assert.equal(device.activeConfigRefresh, null);
+    assert.equal(states.filter(state => state.status === 'notifying').length, 2);
+    assert.equal(states.filter(state => state.status === 'pulling').length, 2);
+    assert.equal(states.filter(state => state.status === 'idle').length, 2);
+    assert.ok(states.every(state => state.confirmed === false));
 });
 
 test('continues the config refresh queue after a failed trigger', async () => {
     const device = createDevice();
+    const states = [];
+    device.on('configSyncState', (state) => states.push(state));
     let calls = 0;
 
     device.sendPingTrigger = async () => {
@@ -136,6 +144,8 @@ test('continues the config refresh queue after a failed trigger', async () => {
     await device.queueConfigRefresh('second', { quietMs: 0, maxWaitMs: 50 });
 
     assert.equal(calls, 2);
+    assert.equal(states.filter(state => state.status === 'failed').length, 1);
+    assert.equal(states.at(-1).status, 'no_response');
 });
 
 test('action response matcher ignores status reports for another channel or state', () => {

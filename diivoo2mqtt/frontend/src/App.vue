@@ -225,6 +225,19 @@
                 Battery {{ device.battery || 'Unknown' }}
               </div>
 
+              <div
+                v-if="configSyncStateFor(device.valveId)"
+                class="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-bold max-md:flex-1 max-md:justify-center"
+                :class="configSyncChipClass(configSyncStateFor(device.valveId).status)"
+                :title="configSyncTitle(configSyncStateFor(device.valveId))"
+              >
+                <span
+                  v-if="isConfigSyncActive(configSyncStateFor(device.valveId).status)"
+                  class="h-2 w-2 animate-pulse rounded-full bg-current"
+                />
+                {{ configSyncLabel(configSyncStateFor(device.valveId)) }}
+              </div>
+
               <button
                 v-if="renamingDeviceId !== device.valveId"
                 type="button"
@@ -754,6 +767,8 @@ const planDirty = ref(false)
 
 const gateways = ref([])
 const diagnosticLogs = ref([])
+const configSyncStates = ref({})
+const configSyncClearTimers = new Map()
 
 const rawJsonContent = ref('')
 const rawJsonError = ref('')
@@ -1248,6 +1263,67 @@ function sendValve(deviceId, channelId, action) {
   }, 2200)
 }
 
+function configSyncStateFor(valveId) {
+  return configSyncStates.value[String(valveId)] || null
+}
+
+function isConfigSyncActive(status) {
+  return ['queued', 'notifying', 'pulling'].includes(status)
+}
+
+function configSyncChipClass(status) {
+  if (status === 'idle') return 'theme-chip-success'
+  if (['no_response', 'timeout', 'failed'].includes(status)) return 'theme-chip-danger'
+  return 'theme-chip-warning'
+}
+
+function configSyncLabel(state) {
+  if (!state) return ''
+  if (state.status === 'queued') return state.pending > 1 ? `Config queued (${state.pending})` : 'Config queued'
+  if (state.status === 'notifying') return 'Notifying device…'
+  if (state.status === 'pulling') return `Device pulling… (${state.requestCount})`
+  if (state.status === 'idle') return `Pull idle · ${state.requestCount} request${state.requestCount === 1 ? '' : 's'}`
+  if (state.status === 'no_response') return 'Device did not request config'
+  if (state.status === 'timeout') return 'Config pull timed out'
+  if (state.status === 'failed') return 'Config refresh failed'
+  return 'Config status unknown'
+}
+
+function configSyncTitle(state) {
+  if (!state) return ''
+  const reason = state.reason ? `Reason: ${state.reason}. ` : ''
+  const confirmation = state.confirmed
+    ? 'The device confirmed the configuration.'
+    : 'The protocol does not provide a final configuration confirmation.'
+  return `${reason}${confirmation}`
+}
+
+function handleConfigSyncState(state) {
+  if (!state || state.valveId == null || !state.status) return
+
+  const key = String(state.valveId)
+  const existingTimer = configSyncClearTimers.get(key)
+  if (existingTimer) {
+    clearTimeout(existingTimer)
+    configSyncClearTimers.delete(key)
+  }
+
+  configSyncStates.value = {
+    ...configSyncStates.value,
+    [key]: state,
+  }
+
+  if (!isConfigSyncActive(state.status)) {
+    const timer = setTimeout(() => {
+      const next = { ...configSyncStates.value }
+      delete next[key]
+      configSyncStates.value = next
+      configSyncClearTimers.delete(key)
+    }, 8000)
+    configSyncClearTimers.set(key, timer)
+  }
+}
+
 function isDeviceCollapsed(valveId) {
   return collapsedDevices.value.has(valveId)
 }
@@ -1681,6 +1757,7 @@ onMounted(async () => {
   socket.on('deviceUpdate', handleDeviceUpdate)
   socket.on('pairingState', handlePairingState)
   socket.on('channelConfigState', handleChannelConfigState)
+  socket.on('configSyncState', handleConfigSyncState)
   socket.on('gatewaysState', (gws) => { gateways.value = Array.isArray(gws) ? gws : [] })
   socket.on('diagnosticLogs', handleDiagnosticLogs)
 
@@ -1699,6 +1776,7 @@ onUnmounted(() => {
   socket?.off('deviceUpdate', handleDeviceUpdate)
   socket?.off('pairingState', handlePairingState)
   socket?.off('channelConfigState', handleChannelConfigState)
+  socket?.off('configSyncState', handleConfigSyncState)
   socket?.off('gatewaysState')
   socket?.off('diagnosticLogs', handleDiagnosticLogs)
 
@@ -1709,6 +1787,9 @@ onUnmounted(() => {
     window.clearInterval(intervalId)
     intervalId = null
   }
+
+  for (const timer of configSyncClearTimers.values()) clearTimeout(timer)
+  configSyncClearTimers.clear()
 
   if (themeMediaQuery) {
     if (themeMediaQuery.removeEventListener) {
