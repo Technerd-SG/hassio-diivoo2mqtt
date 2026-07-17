@@ -84,8 +84,12 @@ class MqttBridge {
 
         // Gateway-Updates
         this.hub.on('gatewayButton', this.handleGatewayButton.bind(this));
+        this.hub.on('gatewayIdentified', this.handleGatewayIdentified.bind(this));
         this.hub.on('gatewayVersion', this.handleGatewayVersion.bind(this));
         this.hub.on('gatewayConnection', this.handleGatewayConnection.bind(this));
+        for (const migration of [...(this.hub.gatewayIdentityMigrations || [])]) {
+            this.handleGatewayIdentified(migration);
+        }
 
         // OTA-Updates
         if (this.hub.otaManager) {
@@ -99,9 +103,6 @@ class MqttBridge {
     // ------------------------------------------------------------
 
     _getGatewayIds() {
-        if (Array.isArray(this.hub.gatewayConfigs) && this.hub.gatewayConfigs.length > 0) {
-            return this.hub.gatewayConfigs.map(gw => gw.id);
-        }
         if (this.hub.gateways instanceof Map) {
             return Array.from(this.hub.gateways.keys());
         }
@@ -564,6 +565,45 @@ class MqttBridge {
                 console.warn(`[MQTT] Could not query gateway version for ${gatewayId}: ${err.message}`);
             }
         }
+    }
+
+    _clearGatewayDiscovery(gatewayId) {
+        const p = this.discoveryPrefix;
+        for (const topic of [
+            `${p}/light/gateway_${gatewayId}_led/config`,
+            `${p}/sensor/gateway_${gatewayId}_version/config`,
+            `${p}/sensor/gateway_${gatewayId}_model/config`,
+            `${p}/binary_sensor/gateway_${gatewayId}_online/config`,
+            `${p}/binary_sensor/gateway_${gatewayId}_button/config`,
+            `${p}/button/gateway_${gatewayId}_portal/config`,
+            `${p}/button/gateway_${gatewayId}_clearwifi/config`,
+            `${p}/button/gateway_${gatewayId}_refresh_version/config`,
+            `${p}/update/gateway_${gatewayId}_fw/config`,
+            `diivoo/gateway/${gatewayId}/state`,
+            `diivoo/gateway/${gatewayId}/update`,
+        ]) {
+            this._publish(topic, '', { retain: true });
+        }
+    }
+
+    handleGatewayIdentified({ previousGatewayId, gatewayId }) {
+        if (!previousGatewayId || previousGatewayId === gatewayId) return;
+
+        if (Array.isArray(this.hub.gatewayIdentityMigrations)) {
+            this.hub.gatewayIdentityMigrations = this.hub.gatewayIdentityMigrations.filter(
+                (migration) => migration.previousGatewayId !== previousGatewayId || migration.gatewayId !== gatewayId
+            );
+        }
+
+        if (this.gatewayStates.has(previousGatewayId)) {
+            this.gatewayStates.set(gatewayId, this.gatewayStates.get(previousGatewayId));
+            this.gatewayStates.delete(previousGatewayId);
+        }
+
+        this._clearGatewayDiscovery(previousGatewayId);
+        this.discoveredGateways.delete(previousGatewayId);
+
+        console.log(`[MQTT] Gateway identity migrated: ${previousGatewayId} -> ${gatewayId}`);
     }
 
     handleGatewayButton(ev) {

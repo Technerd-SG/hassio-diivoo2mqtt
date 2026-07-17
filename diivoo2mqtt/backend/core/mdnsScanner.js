@@ -1,12 +1,13 @@
-const mdns = require('multicast-dns')();
+const createMdns = require('multicast-dns');
 const EventEmitter = require('events');
 
 class MDnsScanner extends EventEmitter {
-    constructor() {
+    constructor(options = {}) {
         super();
         this.knownGateways = new Map(); // ip -> info
+        this.mdns = options.mdns || createMdns();
         
-        mdns.on('response', (response) => {
+        this.mdns.on('response', (response) => {
             this._handleResponse(response);
         });
     }
@@ -23,11 +24,15 @@ class MDnsScanner extends EventEmitter {
             clearInterval(this.scanInterval);
             this.scanInterval = null;
         }
-        mdns.destroy();
+        this.mdns.destroy();
+    }
+
+    forgetGateway(ip) {
+        this.knownGateways.delete(ip);
     }
 
     _query() {
-        mdns.query({
+        this.mdns.query({
             questions: [{
                 name: '_diivoo._tcp.local',
                 type: 'PTR'

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Added stable MAC-based gateway identity, persistence for mDNS-discovered gateways, DHCP address migration, and cleanup of provisional Home Assistant entities. Thanks to @briodan for PR #16 and the detailed investigation in issue #11.
 - Added per-channel naming support. Thanks to @sevensolutions for PR #27 and to @bumpitdowntheroad for requesting and detailing the feature in issue #26.
 - Improved valve command reliability: unrelated radio traffic no longer stops retries, acknowledgements must confirm the requested state, failures restore the last confirmed Home Assistant state, unreachable valves are marked offline until they report again, and command results are published via MQTT. Thanks to @jsbrich for reporting issue #31.
 

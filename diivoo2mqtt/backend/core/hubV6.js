@@ -48,6 +48,7 @@ class SmartHub extends EventEmitter {
         this.gatewayConfigs = gatewaysConfig;
 
         this.gateways = new Map();
+        this.gatewayIdentityMigrations = [];
 
         // Starte mDNS Scanner
         this.mdnsScanner = new MDnsScanner();
@@ -355,6 +356,55 @@ class SmartHub extends EventEmitter {
                 this.deviceStore.save(this.devices);
             }
         }
+        for (const gateway of this.gateways.values()) {
+            gateway.destroy();
+        }
+    }
+
+    identifyGateway(node, versionInfo) {
+        const canonicalId = versionInfo?.canonicalId;
+        if (!node || !canonicalId) return node?.id || null;
+
+        const previousGatewayId = node.id;
+        if (previousGatewayId === canonicalId) {
+            this.gatewayStore.save(this.gateways);
+            return canonicalId;
+        }
+
+        const existing = this.gateways.get(canonicalId);
+        if (existing && existing !== node) {
+            console.log(
+                `[SmartHub] Gateway ${canonicalId} moved from ${existing.ip} to ${node.ip}; replacing stale connection.`
+            );
+            existing.destroy();
+            this.gateways.delete(canonicalId);
+        }
+
+        if (this.gateways.get(previousGatewayId) === node) {
+            this.gateways.delete(previousGatewayId);
+        }
+
+        node.id = canonicalId;
+        if (node.radioQueue) {
+            node.radioQueue.name = `gateway-${canonicalId}-radio`;
+        }
+        this.gateways.set(canonicalId, node);
+        this.gatewayStore.save(this.gateways);
+
+        const migration = {
+            previousGatewayId,
+            gatewayId: canonicalId,
+            node,
+            ts: Date.now(),
+        };
+        this.gatewayIdentityMigrations.push(migration);
+        this.emit('gatewayIdentified', migration);
+        this.emit('gatewayStateUpdate');
+
+        console.log(
+            `[SmartHub] Gateway identified: ${previousGatewayId} -> ${canonicalId} (${node.ip}:${node.port})`
+        );
+        return canonicalId;
     }
 
     _loadGateways() {
@@ -363,7 +413,7 @@ class SmartHub extends EventEmitter {
             this._addDynamicGateway(gwInfo);
         }
         if (savedGateways.length > 0) {
-            console.log(`[SmartHub] ${savedGateways.length} manually saved gateway(s) restored.`);
+            console.log(`[SmartHub] ${savedGateways.length} saved gateway(s) restored.`);
         }
     }
 
@@ -376,16 +426,20 @@ class SmartHub extends EventEmitter {
     }
 
     _addDynamicGateway(gwInfo) {
-        // Falls wir schon ein Gateway mit dieser IP oder ID haben, ignorieren
+        // A second discovery path for the same address must not create a duplicate.
         for (const existingNode of this.gateways.values()) {
-            if (existingNode.ip === gwInfo.ip) {
-                // Wenn die IP existiert, aber unter anderer ID, aktualisieren wir evtl. nix,
-                // da das Gateway schon läuft.
-                return;
-            }
+            if (existingNode.ip === gwInfo.ip) return;
         }
 
-        if (this.gateways.has(gwInfo.id)) return;
+        const existingById = this.gateways.get(gwInfo.id);
+        if (existingById) {
+            if (existingById.ip === gwInfo.ip && existingById.port === gwInfo.port) return;
+            console.log(
+                `[SmartHub] Gateway ${gwInfo.id} discovered at new address ${gwInfo.ip}:${gwInfo.port}.`
+            );
+            existingById.destroy();
+            this.gateways.delete(gwInfo.id);
+        }
 
         console.log(`[SmartHub] Adding gateway dynamically: ${gwInfo.id} (${gwInfo.ip}:${gwInfo.port})`);
 
@@ -400,19 +454,15 @@ class SmartHub extends EventEmitter {
         // Notify frontend that a new gateway was added
         this.emit('gatewayStateUpdate');
 
-        // Save manual gateways
-        if (gwInfo.id.startsWith('manual-')) {
-            this.gatewayStore.save(this.gateways);
-        }
+        this.gatewayStore.save(this.gateways);
     }
 
     _removeDynamicGateway(gatewayId) {
-        if (!gatewayId.startsWith('manual-')) return;
-
         const node = this.gateways.get(gatewayId);
         if (node) {
-            console.log(`[SmartHub] Removing manual gateway: ${gatewayId}`);
+            console.log(`[SmartHub] Removing gateway: ${gatewayId}`);
 
+            this.mdnsScanner?.forgetGateway(node.ip);
             node.destroy();
 
             this.gateways.delete(gatewayId);

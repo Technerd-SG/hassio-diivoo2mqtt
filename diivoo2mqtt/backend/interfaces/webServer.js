@@ -212,11 +212,13 @@ class WebServer {
                 }
             });
 
-            socket.on('removeManualGateway', ({ id }) => {
+            const removeGateway = ({ id }) => {
                 if (this.hub && typeof this.hub._removeDynamicGateway === 'function') {
                     this.hub._removeDynamicGateway(id);
                 }
-            });
+            };
+            socket.on('removeGateway', removeGateway);
+            socket.on('removeManualGateway', removeGateway); // Backward compatibility for older frontends.
 
             socket.on('heartbeat', (data, callback) => {
                 if (typeof callback === 'function') {
