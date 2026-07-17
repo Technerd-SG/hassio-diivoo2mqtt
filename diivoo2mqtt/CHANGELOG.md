@@ -2,7 +2,7 @@
 
 ## Unreleased
 - Added per-channel naming support. Thanks to @sevensolutions for PR #27 and to @bumpitdowntheroad for requesting and detailing the feature in issue #26.
-- Improved valve command reliability: unrelated radio traffic no longer stops retries, acknowledgements must confirm the requested state, failures restore the last confirmed Home Assistant state, unreachable valves are marked offline until they report again, and command results are published via MQTT.
+- Improved valve command reliability: unrelated radio traffic no longer stops retries, acknowledgements must confirm the requested state, failures restore the last confirmed Home Assistant state, unreachable valves are marked offline until they report again, and command results are published via MQTT. Thanks to @jsbrich for reporting issue #31.
 
 ## 0.1.0
 - Erste veröffentlichte Version
