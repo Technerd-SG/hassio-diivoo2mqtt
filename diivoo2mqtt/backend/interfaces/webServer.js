@@ -545,8 +545,17 @@ class WebServer {
                     const { rawJson } = payload;
                     if (!rawJson) throw new Error('No JSON provided');
 
-                    // Validierung: Versuche es zu parsen
-                    JSON.parse(rawJson);
+                    const parsed = JSON.parse(rawJson);
+                    const devices = Array.isArray(parsed) ? parsed : parsed?.devices;
+                    if (!Array.isArray(devices)) {
+                        throw new Error('Expected a device array or an object containing a devices array');
+                    }
+                    if (parsed && !Array.isArray(parsed) && parsed.hubId != null) {
+                        const hubId = Number(parsed.hubId);
+                        if (!Number.isInteger(hubId) || hubId < 0 || hubId > 0xFFFFFFFF) {
+                            throw new Error('Invalid hubId');
+                        }
+                    }
 
                     // Speichern
                     fs.writeFileSync(this.hub.deviceStore.filePath, rawJson, 'utf8');
