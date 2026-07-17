@@ -93,6 +93,51 @@ test('does not resolve an action when its ACK reports the wrong state', () => {
     assert.ok(device.pendingRequests.has(0x03));
 });
 
+test('serializes config refresh triggers for the same device', async () => {
+    const device = createDevice();
+    let active = 0;
+    let maxActive = 0;
+    let calls = 0;
+
+    device.sendPingTrigger = async () => {
+        calls++;
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise(resolve => setTimeout(resolve, 5));
+        device._markConfigPullActivity(0x05);
+        active--;
+        return [{ cmd: 0x05 }];
+    };
+
+    await Promise.all([
+        device.queueConfigRefresh('first', { quietMs: 1, maxWaitMs: 100 }),
+        device.queueConfigRefresh('second', { quietMs: 1, maxWaitMs: 100 }),
+    ]);
+
+    assert.equal(calls, 2);
+    assert.equal(maxActive, 1);
+    assert.equal(device.activeConfigRefresh, null);
+});
+
+test('continues the config refresh queue after a failed trigger', async () => {
+    const device = createDevice();
+    let calls = 0;
+
+    device.sendPingTrigger = async () => {
+        calls++;
+        if (calls === 1) throw new Error('simulated refresh failure');
+        return [];
+    };
+
+    await assert.rejects(
+        device.queueConfigRefresh('first', { quietMs: 0, maxWaitMs: 50 }),
+        /simulated refresh failure/
+    );
+    await device.queueConfigRefresh('second', { quietMs: 0, maxWaitMs: 50 });
+
+    assert.equal(calls, 2);
+});
+
 test('action response matcher ignores status reports for another channel or state', () => {
     const device = createDevice();
     device.initChannels(2);
