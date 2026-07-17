@@ -151,6 +151,7 @@ class SmartHub extends EventEmitter {
                 this.emit('deviceUpdate', updateData);
                 this.deviceStore.save(this.devices);
             });
+            device.on('configSyncState', (state) => this.emit('configSyncState', state));
 
             this.devices.set(data.valveId, device);
         }
@@ -626,6 +627,7 @@ class SmartHub extends EventEmitter {
                     this.emit('deviceUpdate', updateData);
                     this.deviceStore.save(this.devices);
                 });
+                device.on('configSyncState', (state) => this.emit('configSyncState', state));
 
                 this.devices.set(senderId, device);
                 this.deviceStore.save(this.devices); // Sofort nach dem Anlernen speichern
