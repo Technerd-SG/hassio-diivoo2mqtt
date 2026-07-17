@@ -21,6 +21,7 @@ class DeviceStore {
 
         this.isDirty = false;
         this.latestSerialized = null;
+        this.loadedHubId = null;
         
         // Schreibe höchstens alle 60 Sekunden auf die Festplatte (Schont SD-Karten)
         this.saveInterval = setInterval(() => this._flush(), 60000);
@@ -61,7 +62,23 @@ class DeviceStore {
 
         try {
             const data = fs.readFileSync(this.filePath, 'utf8');
-            return JSON.parse(data);
+            const parsed = JSON.parse(data);
+
+            // Current GitHub releases historically stored a plain device array,
+            // while older Forgejo development builds used { hubId, devices }.
+            if (Array.isArray(parsed)) {
+                return parsed;
+            }
+
+            if (parsed && Array.isArray(parsed.devices)) {
+                const importedHubId = Number(parsed.hubId);
+                this.loadedHubId = Number.isInteger(importedHubId) && importedHubId >= 0
+                    ? importedHubId >>> 0
+                    : null;
+                return parsed.devices;
+            }
+
+            throw new Error('Expected a device array or an object containing a devices array');
         } catch (err) {
             console.error(`[DeviceStore] Error loading devices from ${this.filePath}:`, err.message);
             return [];
@@ -70,7 +87,7 @@ class DeviceStore {
 
     save(devicesMap) {
         try {
-            this.latestSerialized = Array.from(devicesMap.values()).map(device => {
+            const devices = Array.from(devicesMap.values()).map(device => {
                 return {
                     valveId: device.valveId,
                     model: device.model,
@@ -85,6 +102,10 @@ class DeviceStore {
                     lastSeen: device.lastSeen
                 };
             });
+
+            this.latestSerialized = Number.isInteger(this.loadedHubId)
+                ? { hubId: this.loadedHubId, devices }
+                : devices;
             this.isDirty = true;
         } catch (err) {
             console.error(`[DeviceStore] Error serialising devices:`, err.message);

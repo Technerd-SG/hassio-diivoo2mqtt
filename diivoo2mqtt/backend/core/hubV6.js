@@ -102,11 +102,21 @@ class SmartHub extends EventEmitter {
 
     _loadDevices() {
         const savedDevices = this.deviceStore.load();
+        if (!Array.isArray(savedDevices)) {
+            console.error('[SmartHub] Device store did not return a device array; starting without saved devices.');
+            return;
+        }
+
+        if (Number.isInteger(this.deviceStore.loadedHubId) && this.deviceStore.loadedHubId !== this.config.id) {
+            console.log(`[SmartHub] Restoring persisted hub ID ${this.deviceStore.loadedHubId}.`);
+            this.config.id = this.deviceStore.loadedHubId;
+        }
+
         for (const data of savedDevices) {
             const device = new ValveDevice(data.valveId, this.config.id, this.gatewayApi, {
                 isBound: data.isBound,
                 model: data.model,
-                alias: data.alias ?? null,
+                alias: data.alias ?? data.displayName ?? null,
                 channelCount: data.channelCount,
                 deviceAddress: data.deviceAddress,
                 channelCode: data.channelCode,
