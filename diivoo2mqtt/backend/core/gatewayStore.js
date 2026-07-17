@@ -42,7 +42,9 @@ class GatewayStore {
                     continue;
                 }
 
-                gatewaysById.set(id, { id, ip, port });
+                const rawAlias = typeof gateway.alias === 'string' ? gateway.alias.trim() : '';
+                const alias = rawAlias ? rawAlias.slice(0, 80) : null;
+                gatewaysById.set(id, { id, ip, port, alias });
             }
 
             return Array.from(gatewaysById.values());
@@ -59,7 +61,8 @@ class GatewayStore {
                 .map(gw => ({
                     id: gw.id,
                     ip: gw.ip,
-                    port: gw.port
+                    port: gw.port,
+                    alias: gw.alias || null,
                 }));
 
             const tempPath = `${this.filePath}.tmp`;

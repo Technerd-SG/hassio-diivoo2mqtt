@@ -83,6 +83,9 @@ class MqttBridge {
         });
 
         // Gateway-Updates
+        this.hub.on('gatewayRenamed', ({ gatewayId }) => {
+            this.publishGatewayState(gatewayId);
+        });
         this.hub.on('gatewayButton', this.handleGatewayButton.bind(this));
         this.hub.on('gatewayIdentified', this.handleGatewayIdentified.bind(this));
         this.hub.on('gatewayVersion', this.handleGatewayVersion.bind(this));
@@ -369,6 +372,7 @@ class MqttBridge {
         }
 
         const gwState = this._getGatewayState(gatewayId);
+        const gwNode = this._getGatewayNode(gatewayId);
         const stateTopic = `diivoo/gateway/${gatewayId}/state`;
         const discoveryPrefix = this.discoveryPrefix;
 
@@ -380,7 +384,7 @@ class MqttBridge {
         const deviceBase = {
             identifiers: [`diivoo_gateway_${stableGwId}`],
             ...(macColon ? { connections: [['mac', macColon]] } : {}),
-            name: `Diivoo Gateway ${stableGwId}`,
+            name: gwNode?.alias || `Diivoo Gateway ${stableGwId}`,
             manufacturer: 'Diivoo Custom Hub',
             model: gwState.model || 'Custom Gateway',
             sw_version: gwState.version || undefined,
@@ -541,11 +545,14 @@ class MqttBridge {
             connected,
 
             // Für HA Light mit schema=json
-            state: gwState.ledState || 'OFF',
+            state: gwNode?.ledState || gwState.ledState || 'OFF',
 
             // Zusätzliche Infos
-            led: gwState.ledState || 'OFF',
-            buttonPressed: !!gwState.buttonPressed,
+            alias: gwNode?.alias || null,
+            led: gwNode?.ledState || gwState.ledState || 'OFF',
+            buttonPressed: typeof gwNode?.buttonPressed === 'boolean'
+                ? gwNode.buttonPressed
+                : !!gwState.buttonPressed,
             version: gwState.version || '',
             model: gwState.model || '',
             mac: gwState.mac || '',

@@ -374,6 +374,7 @@ class SmartHub extends EventEmitter {
 
         const existing = this.gateways.get(canonicalId);
         if (existing && existing !== node) {
+            if (!node.alias && existing.alias) node.alias = existing.alias;
             console.log(
                 `[SmartHub] Gateway ${canonicalId} moved from ${existing.ip} to ${node.ip}; replacing stale connection.`
             );
@@ -447,7 +448,8 @@ class SmartHub extends EventEmitter {
         const node = new GatewayNode({
             id: gwInfo.id,
             ip: gwInfo.ip,
-            port: gwInfo.port
+            port: gwInfo.port,
+            alias: gwInfo.alias || null,
         }, this);
 
         this.gateways.set(node.id, node);
@@ -500,6 +502,23 @@ class SmartHub extends EventEmitter {
         return true;
     }
 
+    renameGateway(gatewayId, alias) {
+        const gateway = this.gateways.get(gatewayId);
+        if (!gateway) return false;
+
+        const normalizedAlias = String(alias || '').trim();
+        if (normalizedAlias.length > 80) {
+            throw new Error('Gateway name must be at most 80 characters.');
+        }
+
+        gateway.alias = normalizedAlias || null;
+        this.gatewayStore.save(this.gateways);
+        this.emit('gatewayRenamed', { gatewayId, alias: gateway.alias });
+        this.emit('gatewayStateUpdate');
+        console.log(`[SmartHub] Gateway ${gatewayId} renamed to: ${gateway.alias ?? '(default)'}`);
+        return true;
+    }
+
     async routePacket(hex, txChannel, rxChannel, candidates, options = {}) {
         const preferred = options.preferredGatewayId ? this.gateways.get(options.preferredGatewayId) : null;
         const candidateGws = candidates.map(id => this.gateways.get(id)).filter(Boolean);
@@ -545,8 +564,12 @@ class SmartHub extends EventEmitter {
         return gw;
     }
 
-    setGatewayLed(gatewayId, on) {
-        return this._getGatewayOrThrow(gatewayId).setLed(!!on);
+    async setGatewayLed(gatewayId, on) {
+        const gateway = this._getGatewayOrThrow(gatewayId);
+        const result = await gateway.setLed(!!on);
+        gateway.ledState = on ? 'ON' : 'OFF';
+        this.emit('gatewayStateUpdate');
+        return result;
     }
 
     startGatewayPortal(gatewayId) {

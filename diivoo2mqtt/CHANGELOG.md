@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Added persistent gateway aliases that update the existing Home Assistant device without changing its stable MAC identity, plus collapsible Web UI controls for the LED, WiFi portal, version refresh, button state, and credential reset. Thanks to @briodan for PR #17 and to @gekkie for requesting gateway naming in issue #25.
 - Serialized per-device configuration refreshes so rapid schedule or rain-delay changes cannot start overlapping device pulls, and added live pull progress to the Web UI without claiming an unavailable final device confirmation. Thanks to @briodan for the protocol investigation in issue #4.
 - Aligned device card headers consistently with gateway cards. Thanks to @briodan for PR #21.
 - Added stable MAC-based gateway identity, persistence for mDNS-discovered gateways, DHCP address migration, and cleanup of provisional Home Assistant entities. Thanks to @briodan for PR #16 and the detailed investigation in issue #11.

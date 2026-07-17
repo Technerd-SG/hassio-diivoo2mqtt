@@ -134,21 +134,10 @@ class WebServer {
             }
 
             // Gateways Status mitsenden
-            const gws = [];
-            for (const gw of this.hub.gateways.values()) {
-                gws.push({
-                    id: gw.id,
-                    ip: gw.ip,
-                    port: gw.port,
-                    isConnected: gw.isConnected,
-                    version: gw.lastVersion?.version || null,
-                    model: gw.lastVersion?.model || null,
-                    mac: gw.lastVersion?.mac || null,
-                    lastSeenAt: gw.lastSeenAt,
-                    otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
-                });
-            }
-            socket.emit('gatewaysState', gws);
+            socket.emit(
+                'gatewaysState',
+                Array.from(this.hub.gateways.values()).map((gateway) => this._serializeGateway(gateway))
+            );
 
             socket.on('app:ping', (payload, ack) => {
                 if (typeof ack === 'function') {
@@ -170,21 +159,10 @@ class WebServer {
 
             // --- Gateway & OTA Events ---
             socket.on('getGateways', () => {
-                const gws = [];
-                for (const gw of this.hub.gateways.values()) {
-                    gws.push({
-                        id: gw.id,
-                        ip: gw.ip,
-                        port: gw.port,
-                        isConnected: gw.isConnected,
-                        version: gw.lastVersion?.version || null,
-                        model: gw.lastVersion?.model || null,
-                        mac: gw.lastVersion?.mac || null,
-                        lastSeenAt: gw.lastSeenAt,
-                        otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
-                    });
-                }
-                socket.emit('gatewaysState', gws);
+                socket.emit(
+                    'gatewaysState',
+                    Array.from(this.hub.gateways.values()).map((gateway) => this._serializeGateway(gateway))
+                );
             });
 
 
@@ -219,6 +197,60 @@ class WebServer {
             };
             socket.on('removeGateway', removeGateway);
             socket.on('removeManualGateway', removeGateway); // Backward compatibility for older frontends.
+
+            socket.on('renameGateway', ({ gatewayId, alias }, ack) => {
+                try {
+                    const ok = this.hub.renameGateway(gatewayId, alias);
+                    const result = ok
+                        ? { ok: true, gatewayId, alias: this.hub.getGateway(gatewayId)?.alias || null }
+                        : { ok: false, gatewayId, error: 'Gateway not found' };
+                    if (typeof ack === 'function') ack(result);
+                } catch (err) {
+                    if (typeof ack === 'function') ack({ ok: false, gatewayId, error: err.message });
+                }
+            });
+
+            socket.on('gatewaySetLed', async ({ gatewayId, state }, ack) => {
+                try {
+                    const normalizedState = String(state || '').toUpperCase();
+                    if (!['ON', 'OFF'].includes(normalizedState)) throw new Error('Invalid LED state');
+                    await this.hub.setGatewayLed(gatewayId, normalizedState === 'ON');
+                    if (typeof ack === 'function') ack({ ok: true, gatewayId, state: normalizedState });
+                } catch (err) {
+                    console.error(`[Web] LED command failed (${gatewayId}): ${err.message}`);
+                    if (typeof ack === 'function') ack({ ok: false, gatewayId, error: err.message });
+                }
+            });
+
+            socket.on('gatewayPortal', async ({ gatewayId }, ack) => {
+                try {
+                    await this.hub.startGatewayPortal(gatewayId);
+                    if (typeof ack === 'function') ack({ ok: true, gatewayId });
+                } catch (err) {
+                    console.error(`[Web] Portal command failed (${gatewayId}): ${err.message}`);
+                    if (typeof ack === 'function') ack({ ok: false, gatewayId, error: err.message });
+                }
+            });
+
+            socket.on('gatewayClearWifi', async ({ gatewayId }, ack) => {
+                try {
+                    await this.hub.clearGatewayWifi(gatewayId);
+                    if (typeof ack === 'function') ack({ ok: true, gatewayId });
+                } catch (err) {
+                    console.error(`[Web] Clear WiFi command failed (${gatewayId}): ${err.message}`);
+                    if (typeof ack === 'function') ack({ ok: false, gatewayId, error: err.message });
+                }
+            });
+
+            socket.on('gatewayRefreshVersion', async ({ gatewayId }, ack) => {
+                try {
+                    const version = await this.hub.getGatewayVersion(gatewayId);
+                    if (typeof ack === 'function') ack({ ok: true, gatewayId, version });
+                } catch (err) {
+                    console.error(`[Web] Version refresh failed (${gatewayId}): ${err.message}`);
+                    if (typeof ack === 'function') ack({ ok: false, gatewayId, error: err.message });
+                }
+            });
 
             socket.on('heartbeat', (data, callback) => {
                 if (typeof callback === 'function') {
@@ -585,21 +617,10 @@ class WebServer {
         });
 
         this.hub.on('gatewayStateUpdate', () => {
-            const gws = [];
-            for (const gw of this.hub.gateways.values()) {
-                gws.push({
-                    id: gw.id,
-                    ip: gw.ip,
-                    port: gw.port,
-                    isConnected: gw.isConnected,
-                    version: gw.lastVersion?.version || null,
-                    model: gw.lastVersion?.model || null,
-                    mac: gw.lastVersion?.mac || null,
-                    lastSeenAt: gw.lastSeenAt,
-                    otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
-                });
-            }
-            this.io.emit('gatewaysState', gws);
+            this.io.emit(
+                'gatewaysState',
+                Array.from(this.hub.gateways.values()).map((gateway) => this._serializeGateway(gateway))
+            );
         });
 
         this.hub.on('diagnosticLogsUpdate', broadcastDiagnosticSummary);
@@ -607,6 +628,23 @@ class WebServer {
         this.server.listen(this.port, '0.0.0.0', () => {
             console.log(`[Web] Frontend running on port ${this.port}`);
         });
+    }
+
+    _serializeGateway(gateway) {
+        return {
+            id: gateway.id,
+            alias: gateway.alias || null,
+            ip: gateway.ip,
+            port: gateway.port,
+            isConnected: gateway.isConnected,
+            ledState: gateway.ledState || 'OFF',
+            buttonPressed: !!gateway.buttonPressed,
+            version: gateway.lastVersion?.version || null,
+            model: gateway.lastVersion?.model || null,
+            mac: gateway.lastVersion?.mac || null,
+            lastSeenAt: gateway.lastSeenAt,
+            otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gateway.id) : null,
+        };
     }
 
     _getChannelOrThrow(device, channelId) {
