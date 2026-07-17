@@ -316,12 +316,19 @@ class GatewayNode {
 
                     if (matchesSender) {
                         const waiter = this.pendingInboundWait;
-                        clearTimeout(waiter.timeout);
-                        if (waiter.signal && waiter.abortHandler) {
-                            waiter.signal.removeEventListener('abort', waiter.abortHandler);
+                        const payloadLength = bytes[11] || 0;
+                        const payload = bytes.slice(12, 12 + payloadLength);
+                        const inbound = { senderId, seq, cmd, payload, hexPayload };
+                        const matchesResponse = !waiter.match || waiter.match(inbound);
+
+                        if (matchesResponse) {
+                            clearTimeout(waiter.timeout);
+                            if (waiter.signal && waiter.abortHandler) {
+                                waiter.signal.removeEventListener('abort', waiter.abortHandler);
+                            }
+                            this.pendingInboundWait = null;
+                            waiter.resolve(inbound);
                         }
-                        this.pendingInboundWait = null;
-                        waiter.resolve({ senderId, seq, cmd, hexPayload });
                     }
                 }
             } catch (_) { }
@@ -542,7 +549,7 @@ class GatewayNode {
         });
     }
 
-    _waitForInbound(targetValveId, waitMs = this.hub.config.features.defaultInboundWaitMs, signal = null) {
+    _waitForInbound(targetValveId, waitMs = this.hub.config.features.defaultInboundWaitMs, signal = null, match = null) {
         return new Promise((resolve, reject) => {
             if (this.pendingInboundWait) {
                 clearTimeout(this.pendingInboundWait.timeout);
@@ -603,6 +610,7 @@ class GatewayNode {
                 timeout,
                 signal,
                 abortHandler,
+                match: typeof match === 'function' ? match : null,
             };
         });
     }
@@ -629,6 +637,7 @@ class GatewayNode {
             retryDelayMs = 35,
             txProfile = 'short',
             signal = null,
+            responseMatcher = null,
         } = options;
 
         await this._ensureRadio(txChannel, txChannel, txProfile);
@@ -641,7 +650,7 @@ class GatewayNode {
             }
 
             await this._txDirect(hexString);
-            inbound = await this._waitForInbound(targetValveId, waitMs, signal);
+            inbound = await this._waitForInbound(targetValveId, waitMs, signal, responseMatcher);
 
             if (inbound) break;
 
@@ -681,6 +690,9 @@ class GatewayNode {
             ? options.retryDelayMs
             : this.hub.config.features.defaultActionRetryDelayMs;
         const fallbackToLegacySpam = !!options.fallbackToLegacySpam;
+        const responseMatcher = typeof options.responseMatcher === 'function'
+            ? options.responseMatcher
+            : null;
 
         return this.radioQueue.enqueue(async ({ signal }) => {
             if (!this.isConnected) {
@@ -698,8 +710,15 @@ class GatewayNode {
                         throw signal.reason || new Error('Aborted');
                     }
 
+                    if (attempt > 1) {
+                        console.warn(
+                            `[Gateway ${this.id}] Retrying action for valve ${targetValveId} ` +
+                            `(attempt ${attempt}/${maxAttempts}).`
+                        );
+                    }
+
                     await this._txDirect(hexString, txTimeoutMs);
-                    inbound = await this._waitForInbound(targetValveId, waitMs, signal);
+                    inbound = await this._waitForInbound(targetValveId, waitMs, signal, responseMatcher);
 
                     if (inbound) break;
 
@@ -709,13 +728,24 @@ class GatewayNode {
                 }
 
                 if (!inbound && fallbackToLegacySpam) {
+                    console.warn(
+                        `[Gateway ${this.id}] No matching confirmation from valve ${targetValveId}; ` +
+                        'starting legacy retry fallback.'
+                    );
                     inbound = await this._legacySpamFallback(hexString, txChannel, targetValveId, {
                         attempts: 12,
                         waitMs: 180,
                         retryDelayMs: 35,
                         txProfile: 'short',
                         signal,
+                        responseMatcher,
                     });
+                }
+
+                if (!inbound) {
+                    console.warn(
+                        `[Gateway ${this.id}] Valve ${targetValveId} did not confirm the action after all retries.`
+                    );
                 }
 
                 return inbound;
