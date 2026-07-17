@@ -5,6 +5,19 @@ const os = require('os');
 const path = require('path');
 const OtaManager = require('./otaManager');
 
+test('uses a channel-specific firmware manifest when configured', () => {
+    const previous = process.env.FIRMWARE_VERSIONS_URL;
+    process.env.FIRMWARE_VERSIONS_URL = 'https://example.invalid/nightly/versions.json';
+
+    try {
+        const manager = new OtaManager({ gateways: new Map() });
+        assert.equal(manager.versionsUrl, 'https://example.invalid/nightly/versions.json');
+    } finally {
+        if (previous == null) delete process.env.FIRMWARE_VERSIONS_URL;
+        else process.env.FIRMWARE_VERSIONS_URL = previous;
+    }
+});
+
 function createManager({ address = '192.0.2.10', webPort = 3456 } = {}) {
     const otaDir = fs.mkdtempSync(path.join(os.tmpdir(), 'diivoo-ota-'));
     const sentUrls = [];

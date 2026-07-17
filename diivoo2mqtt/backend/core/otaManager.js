@@ -9,7 +9,8 @@ class OtaManager extends EventEmitter {
         super();
         this.hub = hub;
         this.otaDir = path.join(__dirname, '..', 'public', 'ota');
-        this.versionsUrl = 'https://raw.githubusercontent.com/Technerd-SG/hassio-diivoo2mqtt/main/firmware/versions.json';
+        this.versionsUrl = process.env.FIRMWARE_VERSIONS_URL ||
+            'https://raw.githubusercontent.com/Technerd-SG/hassio-diivoo2mqtt/main/firmware/versions.json';
         this.latestVersions = {}; // model -> { version, binUrl }
         this.downloadedBins = new Map(); // model -> localPath
 
