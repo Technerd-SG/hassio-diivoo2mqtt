@@ -253,7 +253,7 @@
             >
               <div class="flex items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
                 <div class="min-w-0">
-                  <strong class="block text-lg leading-[1.1] tracking-[-0.02em]">Valve {{ channelId }}</strong>
+                  <strong class="block text-lg leading-[1.1] tracking-[-0.02em]">{{ channelDisplayName(channel, channelId) }}</strong>
                   <span class="theme-text-muted mt-1 block text-[13px] leading-[1.4]">
                     {{ channel.source || 'Manual' }}
                   </span>
@@ -589,6 +589,24 @@
         <template v-else-if="activeSheet === 'config'">
           <div class="grid gap-4">
             <div class="grid gap-3">
+              <div class="text-[15px] font-extrabold tracking-[-0.02em]">Valve name</div>
+              <div class="theme-soft grid min-w-0 gap-1.5 rounded-[18px] border px-3.5 py-3">
+                <label for="channelDisplayName" class="theme-text-muted text-xs font-bold">Custom name</label>
+                <input
+                  id="channelDisplayName"
+                  v-model="configDraft.displayName"
+                  class="theme-input min-h-11 w-full rounded-xl border px-3"
+                  type="text"
+                  maxlength="80"
+                  :placeholder="`Valve ${activeChannel?.channelId}`"
+                />
+                <div class="theme-text-muted text-xs leading-[1.4]">
+                  The name is also published to Home Assistant without changing the entity identity.
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-3">
               <div class="text-[15px] font-extrabold tracking-[-0.02em]">Default runtime</div>
               <div class="grid gap-2.5 md:grid-cols-2">
                 <div class="theme-soft grid min-w-0 gap-1.5 rounded-[18px] border px-3.5 py-3">
@@ -760,6 +778,7 @@ const planForm = reactive({
 })
 
 const configDraft = reactive({
+  displayName: '',
   defaultOpenMinutes: 10,
   rainStopUntil: '',
 })
@@ -830,7 +849,8 @@ const activeDevice = computed(() => {
 const sheetTitle = computed(() => {
   if (activeSheet.value === 'rawEdit') return 'Database Editor'
   if (!activeChannel.value) return 'Schedule'
-  const base = `Valve ${activeChannel.value.channelId}`
+  const channel = activeDevice.value?.channels?.[activeChannel.value.channelId]
+  const base = channelDisplayName(channel, activeChannel.value.channelId)
   return activeSheet.value === 'plan' ? `${base} · Schedules` : `${base} · Settings`
 })
 
@@ -973,6 +993,7 @@ function getDefaultChannelConfig(deviceId, channelId) {
 
   if (!channelConfigs.value[key]) {
     channelConfigs.value[key] = {
+      displayName: '',
       defaultOpenMinutes: 10,
       rainStopUntil: '',
       schedules: [],
@@ -999,7 +1020,12 @@ function cloneSchedules(items = []) {
 function mergeChannelConfigFromDevice(device) {
   for (const [channelId] of Object.entries(device.channels || {})) {
     const config = getDefaultChannelConfig(device.valveId, channelId)
-    const source = device.channelConfig?.[channelId] || device.channels?.[channelId]?.config || null
+    const liveChannel = device.channels?.[channelId]
+    const source = device.channelConfig?.[channelId] || liveChannel?.config || null
+
+    if (typeof liveChannel?.displayName === 'string') {
+      config.displayName = liveChannel.displayName
+    }
 
     if (!source) continue
 
@@ -1011,6 +1037,10 @@ function mergeChannelConfigFromDevice(device) {
 
     if (typeof source.rainStopUntil === 'string') {
       config.rainStopUntil = source.rainStopUntil
+    }
+
+    if (typeof source.displayName === 'string') {
+      config.displayName = source.displayName
     }
 
     if (Array.isArray(source.schedules)) {
@@ -1101,6 +1131,11 @@ function sortedChannels(device) {
 
 function channelCount(device) {
   return Object.keys(device.channels || {}).length
+}
+
+function channelDisplayName(channel, channelId) {
+  const customName = typeof channel?.displayName === 'string' ? channel.displayName.trim() : ''
+  return customName || `Valve ${channelId}`
 }
 
 function isBatteryLow(device) {
@@ -1301,6 +1336,7 @@ function openSheet(type, deviceId, channelId) {
     planForm.mistOnSeconds = 10
     planForm.mistOffSeconds = 30
   } else {
+    configDraft.displayName = config.displayName || activeDevice.value?.channels?.[channelId]?.displayName || ''
     configDraft.defaultOpenMinutes = Math.max(1, Number(config.defaultOpenMinutes || 10))
     configDraft.rainStopUntil = toDateTimeLocalInput(config.rainStopUntil)
   }
@@ -1532,6 +1568,7 @@ function saveChannelConfig() {
   const config = getActiveConfig()
   if (!config || !activeChannel.value) return
 
+  config.displayName = String(configDraft.displayName || '').trim()
   config.defaultOpenMinutes = Math.max(1, Math.min(1092, Number(configDraft.defaultOpenMinutes) || 10))
   config.rainStopUntil = configDraft.rainStopUntil || ''
 
@@ -1539,6 +1576,7 @@ function saveChannelConfig() {
     valveId: activeChannel.value.deviceId,
     channelId: activeChannel.value.channelId,
     config: {
+      displayName: config.displayName,
       defaultOpenMinutes: config.defaultOpenMinutes,
       defaultOpenSeconds: config.defaultOpenMinutes * 60,
       rainStopUntil: config.rainStopUntil,
@@ -1590,6 +1628,10 @@ function handleChannelConfigState({ valveId, channelId, config }) {
 
   const target = getDefaultChannelConfig(valveId, channelId)
 
+  if (typeof config.displayName === 'string') {
+    target.displayName = config.displayName
+  }
+
   if (Number.isFinite(Number(config.defaultOpenMinutes))) {
     target.defaultOpenMinutes = Number(config.defaultOpenMinutes)
   } else if (Number.isFinite(Number(config.defaultOpenSeconds))) {
@@ -1610,6 +1652,7 @@ function handleChannelConfigState({ valveId, channelId, config }) {
     Number(activeChannel.value.deviceId) === Number(valveId) &&
     Number(activeChannel.value.channelId) === Number(channelId)
   ) {
+    configDraft.displayName = target.displayName || ''
     configDraft.defaultOpenMinutes = Math.max(1, Number(target.defaultOpenMinutes || 10))
     configDraft.rainStopUntil = toDateTimeLocalInput(target.rainStopUntil)
   }
