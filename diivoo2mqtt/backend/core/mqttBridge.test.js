@@ -166,6 +166,46 @@ test('MQTT discovery uses a custom channel name without changing its identity', 
     assert.equal(config.command_topic, 'diivoo/123/valve/1/set');
 });
 
+test('gateway alias updates the Home Assistant device name without changing identity', () => {
+    const published = [];
+    const gateway = {
+        id: 'gw-aabbccddeeff',
+        alias: 'Parents gateway',
+        ledState: 'OFF',
+        buttonPressed: false,
+    };
+    const bridge = Object.create(MqttBridge.prototype);
+    Object.assign(bridge, {
+        discoveryPrefix: 'homeassistant',
+        strings: {},
+        hub: {
+            getGateway: () => gateway,
+            gateways: new Map([[gateway.id, gateway]]),
+        },
+        gatewayStates: new Map([[gateway.id, {
+            connected: true,
+            ledState: 'OFF',
+            buttonPressed: false,
+            version: '0.1.11',
+            model: 'tcp_gateway_WG03',
+            mac: 'AABBCCDDEEFF',
+            lastUpdateTs: Date.now(),
+        }]]),
+        discoveredGateways: new Set(),
+        _publish: (topic, payload, options) => published.push({ topic, payload, options }),
+    });
+
+    bridge.publishGatewayAutoDiscovery(gateway.id);
+
+    const ledConfig = published.find(
+        (entry) => entry.topic === 'homeassistant/light/gateway_gw-aabbccddeeff_led/config'
+    );
+    const config = JSON.parse(ledConfig.payload);
+    assert.equal(config.device.name, 'Parents gateway');
+    assert.deepEqual(config.device.identifiers, ['diivoo_gateway_aabbccddeeff']);
+    assert.equal(config.unique_id, 'diivoo_gateway_gw-aabbccddeeff_led');
+});
+
 test('gateway identity migration clears provisional retained topics and preserves state', () => {
     const published = [];
     const bridge = Object.create(MqttBridge.prototype);
