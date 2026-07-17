@@ -1,12 +1,15 @@
 # Changelog
 
 ## Unreleased
+
+## 0.1.59 - 2026-07-17
 - Added persistent gateway aliases that update the existing Home Assistant device without changing its stable MAC identity, plus collapsible Web UI controls for the LED, WiFi portal, version refresh, button state, and credential reset. Thanks to @briodan for PR #17 and to @gekkie for requesting gateway naming in issue #25.
 - Serialized per-device configuration refreshes so rapid schedule or rain-delay changes cannot start overlapping device pulls, and added live pull progress to the Web UI without claiming an unavailable final device confirmation. Thanks to @briodan for the protocol investigation in issue #4.
 - Aligned device card headers consistently with gateway cards. Thanks to @briodan for PR #21.
 - Added stable MAC-based gateway identity, persistence for mDNS-discovered gateways, DHCP address migration, and cleanup of provisional Home Assistant entities. Thanks to @briodan for PR #16 and the detailed investigation in issue #11.
 - Added per-channel naming support. Thanks to @sevensolutions for PR #27 and to @bumpitdowntheroad for requesting and detailing the feature in issue #26.
 - Improved valve command reliability: unrelated radio traffic no longer stops retries, acknowledgements must confirm the requested state, failures restore the last confirmed Home Assistant state, unreachable valves are marked offline until they report again, and command results are published via MQTT. Thanks to @jsbrich for reporting issue #31.
+- Improved operational reliability with atomic and retried persistence, migration of legacy device data, earlier container health reporting, validated MQTT valve durations, more robust gateway startup and OTA handling, and channel-specific firmware manifests.
 
 ## 0.1.0
 - Erste veröffentlichte Version
