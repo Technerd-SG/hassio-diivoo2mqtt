@@ -46,6 +46,20 @@ test('allows initial radio tuning once the TCP socket is writable', async () => 
     assert.deepEqual(node.currentRadio, { txChannel: 4, rxChannel: 0, txProfile: 'short' });
 });
 
+test('OTA probe prefers the configured LAN host over the Docker socket address', async () => {
+    const { node } = createBareGateway();
+    const writes = [];
+    node.isConnected = true;
+    node.client.localAddress = '172.30.33.10';
+    node.client.write = (value) => writes.push(value);
+
+    const probe = node.probeAddonIp(8099, '10.0.0.10');
+    assert.deepEqual(writes, ['PING_URL:http://10.0.0.10:8099/api/health\n']);
+
+    node._processLine('ACK:PING_OK');
+    assert.equal(await probe, '10.0.0.10');
+});
+
 test('OTA start acknowledgement resolves the pending control command', () => {
     const { node, events } = createBareGateway();
     let resolvedWith = null;

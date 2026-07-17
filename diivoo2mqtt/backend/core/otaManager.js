@@ -160,8 +160,12 @@ class OtaManager extends EventEmitter {
         if (!Number.isInteger(port) || port < 1 || port > 65535) {
             throw new Error(`Invalid OTA server port: ${port}`);
         }
-        console.log(`[OTA] Sending IP probe to gateway ${gatewayId}...`);
-        const addonIp = await gw.probeAddonIp(port);
+        const configuredOtaHost = String(process.env.OTA_HOST || '').trim() || null;
+        console.log(
+            `[OTA] Sending reachability probe to gateway ${gatewayId}` +
+            `${configuredOtaHost ? ` via configured host ${configuredOtaHost}` : ''}...`
+        );
+        const addonIp = await gw.probeAddonIp(port, configuredOtaHost);
 
         const otaHost = addonIp.includes(':') ? `[${addonIp}]` : addonIp;
         const otaUrl = `http://${otaHost}:${port}/api/ota/${encodeURIComponent(localFileName)}`;

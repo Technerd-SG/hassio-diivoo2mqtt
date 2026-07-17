@@ -11,6 +11,9 @@ configuration:
   mqtt_password:
     name: MQTT Password
     description: Password for MQTT authentication. Leave empty if the broker does not require authentication.
+  ota_host:
+    name: OTA Host
+    description: Optional LAN IP address or hostname of the Home Assistant host. Set this when gateways cannot reach the add-on through its Docker network address.
   language:
     name: Entity Language
     description: Language used for Home Assistant entity names created via MQTT discovery.
