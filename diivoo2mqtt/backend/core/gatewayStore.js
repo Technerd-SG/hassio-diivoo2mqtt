@@ -46,11 +46,14 @@ class GatewayStore {
                     };
                 });
 
-            fs.writeFile(this.filePath, JSON.stringify(serialized, null, 2), 'utf8', (err) => {
-                if (err) console.error(`[GatewayStore] Error saving gateways to ${this.filePath}:`, err.message);
-            });
+            const tempPath = `${this.filePath}.tmp`;
+            fs.writeFileSync(tempPath, JSON.stringify(serialized, null, 2), 'utf8');
+            fs.renameSync(tempPath, this.filePath);
         } catch (err) {
-            console.error(`[GatewayStore] Error serialising gateways:`, err.message);
+            try {
+                fs.unlinkSync(`${this.filePath}.tmp`);
+            } catch (_) { }
+            console.error(`[GatewayStore] Error saving gateways:`, err.message);
         }
     }
 }
