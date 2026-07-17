@@ -245,6 +245,9 @@ class WebServer {
             socket.on('gatewayRefreshVersion', async ({ gatewayId }, ack) => {
                 try {
                     const version = await this.hub.getGatewayVersion(gatewayId);
+                    console.log(
+                        `[Web] Gateway ${gatewayId} firmware version refreshed: ${version?.version || 'unknown'}`
+                    );
                     if (typeof ack === 'function') ack({ ok: true, gatewayId, version });
                 } catch (err) {
                     console.error(`[Web] Version refresh failed (${gatewayId}): ${err.message}`);
