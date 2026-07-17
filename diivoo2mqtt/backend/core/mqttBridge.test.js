@@ -166,6 +166,41 @@ test('MQTT discovery uses a custom channel name without changing its identity', 
     assert.equal(config.command_topic, 'diivoo/123/valve/1/set');
 });
 
+test('gateway identity migration clears provisional retained topics and preserves state', () => {
+    const published = [];
+    const bridge = Object.create(MqttBridge.prototype);
+    Object.assign(bridge, {
+        discoveryPrefix: 'homeassistant',
+        hub: {
+            gatewayIdentityMigrations: [{
+                previousGatewayId: 'manual-10-0-0-10',
+                gatewayId: 'gw-aabbccddeeff',
+            }],
+        },
+        gatewayStates: new Map([['manual-10-0-0-10', { connected: false, version: '0.1.11' }]]),
+        discoveredGateways: new Set(['manual-10-0-0-10']),
+        _publish: (topic, payload, options) => published.push({ topic, payload, options }),
+    });
+
+    bridge.handleGatewayIdentified({
+        previousGatewayId: 'manual-10-0-0-10',
+        gatewayId: 'gw-aabbccddeeff',
+    });
+
+    assert.equal(bridge.gatewayStates.has('manual-10-0-0-10'), false);
+    assert.equal(bridge.gatewayStates.get('gw-aabbccddeeff').version, '0.1.11');
+    assert.equal(bridge.discoveredGateways.has('manual-10-0-0-10'), false);
+    assert.deepEqual(bridge.hub.gatewayIdentityMigrations, []);
+    assert.ok(published.some((entry) =>
+        entry.topic === 'homeassistant/light/gateway_manual-10-0-0-10_led/config' &&
+        entry.payload === '' &&
+        entry.options?.retain === true
+    ));
+    assert.ok(published.some((entry) =>
+        entry.topic === 'diivoo/gateway/manual-10-0-0-10/state' && entry.payload === ''
+    ));
+});
+
 test('MQTT discovery retains the translated fallback for unnamed channels', () => {
     const published = [];
     const bridge = Object.create(MqttBridge.prototype);
