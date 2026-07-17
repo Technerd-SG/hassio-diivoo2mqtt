@@ -178,6 +178,9 @@
             >
               Clear WiFi
             </button>
+            <div v-if="gatewayActionMessages[gw.id]" class="theme-text-muted w-full px-1 pt-1 text-xs font-bold">
+              {{ gatewayActionMessages[gw.id] }}
+            </div>
           </div>
         </article>
       </section>
@@ -848,6 +851,7 @@ const renamingDeviceId = ref(null)
 const renameInput = ref('')
 const renamingGatewayId = ref(null)
 const renameGatewayInput = ref('')
+const gatewayActionMessages = ref({})
 
 const planDraft = reactive({
   mode: 'normal',
@@ -1674,9 +1678,25 @@ function gatewayPortal(gatewayId) {
   })
 }
 
+function setGatewayActionMessage(gatewayId, message) {
+  gatewayActionMessages.value = { ...gatewayActionMessages.value, [gatewayId]: message }
+  window.setTimeout(() => {
+    if (gatewayActionMessages.value[gatewayId] !== message) return
+    const next = { ...gatewayActionMessages.value }
+    delete next[gatewayId]
+    gatewayActionMessages.value = next
+  }, 6000)
+}
+
 function gatewayRefreshVersion(gatewayId) {
+  setGatewayActionMessage(gatewayId, 'Refreshing firmware version…')
   socket.emit('gatewayRefreshVersion', { gatewayId }, (result) => {
-    if (!result?.ok) alert(`Version refresh failed: ${result?.error || 'Unknown error'}`)
+    if (!result?.ok) {
+      setGatewayActionMessage(gatewayId, `Version refresh failed: ${result?.error || 'Unknown error'}`)
+      return
+    }
+    const version = result.version?.version || result.version || 'response received'
+    setGatewayActionMessage(gatewayId, `Firmware version refreshed: ${version}`)
   })
 }
 
