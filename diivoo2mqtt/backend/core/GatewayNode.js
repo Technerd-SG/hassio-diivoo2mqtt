@@ -10,6 +10,7 @@ class GatewayNode {
         this.id = config.id;
         this.ip = config.ip;
         this.port = config.port;
+        this.alias = config.alias || null;
         this.hub = hubInstance;
 
         this.client = null;
@@ -36,6 +37,8 @@ class GatewayNode {
         };
 
         this.lastVersion = null;
+        this.ledState = 'OFF';
+        this.buttonPressed = false;
 
         this.radioQueue = new RadioJobQueue({
             name: `gateway-${this.id}-radio`,
@@ -262,6 +265,7 @@ class GatewayNode {
 
         if (line === 'BTN:PRESSED' || line === 'BTN:RELEASED') {
             const pressed = line === 'BTN:PRESSED';
+            this.buttonPressed = pressed;
             this.hub.emit('gatewayButton', {
                 gatewayId: this.id,
                 pressed,
@@ -269,6 +273,7 @@ class GatewayNode {
                 raw: line,
                 ts: Date.now(),
             });
+            this.hub.emit('gatewayStateUpdate');
             return;
         }
 

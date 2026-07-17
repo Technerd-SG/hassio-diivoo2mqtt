@@ -64,6 +64,18 @@ test('publishes VERSION with the canonical gateway ID after identification', () 
     assert.equal(events[0][1].gatewayId, 'gw-aabbccddeeff');
 });
 
+test('tracks gateway button state for the web UI', () => {
+    const { node, events } = createBareGateway();
+
+    node._processLine('BTN:PRESSED');
+    assert.equal(node.buttonPressed, true);
+    assert.equal(events[0][0], 'gatewayButton');
+    assert.equal(events[1][0], 'gatewayStateUpdate');
+
+    node._processLine('BTN:RELEASED');
+    assert.equal(node.buttonPressed, false);
+});
+
 test('allows initial radio tuning once the TCP socket is writable', async () => {
     const { node } = createBareGateway();
     const writes = [];
