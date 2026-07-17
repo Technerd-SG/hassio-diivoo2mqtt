@@ -175,6 +175,19 @@ class MqttBridge {
         this.client.publish(topic, payload, options);
     }
 
+    _publishValveCommandResult(valveId, channelId, result) {
+        this._publish(
+            `diivoo/${valveId}/valve/${channelId}/command_result`,
+            JSON.stringify({
+                valveId,
+                channelId,
+                ts: Date.now(),
+                ...result,
+            }),
+            { retain: false }
+        );
+    }
+
     // ------------------------------------------------------------
     // Home Assistant Discovery - Ventile
     // ------------------------------------------------------------
@@ -671,24 +684,56 @@ class MqttBridge {
             const parsed = this._safeJsonParse(raw);
             const simpleState = this._extractOnOff(raw);
 
+            let requestedState = null;
+
             try {
+                let result = null;
+
                 if (parsed && typeof parsed === 'object' && parsed.state) {
-                    if (String(parsed.state).toUpperCase() === 'ON') {
+                    requestedState = String(parsed.state).toUpperCase();
+                    if (requestedState === 'ON') {
                         const duration = this._normalizeDurationSeconds(parsed.duration, defaultDuration);
-                        await device.valve(channelId).on(duration);
-                    } else if (String(parsed.state).toUpperCase() === 'OFF') {
-                        await device.valve(channelId).off();
+                        result = await device.valve(channelId).on(duration);
+                    } else if (requestedState === 'OFF') {
+                        result = await device.valve(channelId).off();
+                    } else {
+                        throw new Error(`Unsupported valve state '${requestedState}'`);
                     }
-                    return;
+                } else if (simpleState === 'ON') {
+                    requestedState = 'ON';
+                    result = await device.valve(channelId).on(defaultDuration);
+                } else if (simpleState === 'OFF') {
+                    requestedState = 'OFF';
+                    result = await device.valve(channelId).off();
+                } else {
+                    throw new Error('Unsupported valve command payload');
                 }
 
-                if (simpleState === 'ON') {
-                    await device.valve(channelId).on(defaultDuration);
-                } else if (simpleState === 'OFF') {
-                    await device.valve(channelId).off();
-                }
+                this._publishValveCommandResult(valveId, channelId, {
+                    ok: true,
+                    requestedState,
+                    verification: result?.via || 'device-response',
+                    gatewayId: result?.gatewayId || null,
+                    status: result?.status || null,
+                    isRunning: typeof result?.isRunning === 'boolean' ? result.isRunning : null,
+                    remainingSeconds: Number.isFinite(result?.remainingSeconds)
+                        ? result.remainingSeconds
+                        : null,
+                });
             } catch (err) {
-                console.error(`[MQTT] Valve command failed: ${err.message}`);
+                console.error(`[MQTT] Valve command failed (${valveId}/ch${channelId}): ${err.message}`);
+                this._publishValveCommandResult(valveId, channelId, {
+                    ok: false,
+                    requestedState,
+                    error: err.message,
+                });
+
+                // Re-publish the last confirmed state so Home Assistant does not
+                // keep showing an optimistic command that the valve never confirmed.
+                this.publishDeviceState({
+                    valveId,
+                    state: device.getLiveState(),
+                });
             }
 
             return;

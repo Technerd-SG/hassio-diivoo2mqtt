@@ -126,6 +126,13 @@ class ValveDevice extends EventEmitter {
             });
 
             const timeoutMs = Number.isInteger(txPolicy.timeoutMs) ? txPolicy.timeoutMs : 8000;
+            const expectedRunning = actionText === 'AN';
+            const responseMatcher = (inbound) => this._matchesActionResponse(
+                inbound,
+                seq,
+                channelIndex,
+                expectedRunning
+            );
 
             const timeout = setTimeout(() => {
                 cleanup();
@@ -135,7 +142,7 @@ class ValveDevice extends EventEmitter {
             this.pendingRequests.set(seq, {
                 channelIndex,
                 actionText,
-                expectedRunning: actionText === 'AN',
+                expectedRunning,
                 resolve: (resultData) => {
                     clearTimeout(timeout);
                     cleanup();
@@ -149,13 +156,36 @@ class ValveDevice extends EventEmitter {
                 payload,
                 `Befehl ${actionText}`,
                 this.getDownlinkChannel(),
-                this.getDownlinkChannel()
+                this.getDownlinkChannel(),
+                { responseMatcher }
             ).catch(err => {
                 clearTimeout(timeout);
                 cleanup();
                 reject(err);
             });
         });
+    }
+
+    _matchesActionResponse(inbound, actionSeq, channelIndex, expectedRunning) {
+        if (!inbound || !Number.isInteger(inbound.cmd)) return false;
+
+        if (inbound.cmd === 0xA1) {
+            if (inbound.seq !== actionSeq || !Array.isArray(inbound.payload) || inbound.payload.length < 13) {
+                return false;
+            }
+            const state = utils.decodeStatusSourceByte(inbound.payload[1]);
+            return state.isRunning === expectedRunning;
+        }
+
+        if (inbound.cmd !== 0x02 || !Array.isArray(inbound.payload) || inbound.payload.length < 15) {
+            return false;
+        }
+
+        const reportedChannel = this.normalizeValveIndex(inbound.payload[2]);
+        if (reportedChannel !== channelIndex) return false;
+
+        const state = utils.decodeStatusSourceByte(inbound.payload[3]);
+        return state.isRunning === expectedRunning;
     }
 
     initChannels(count) {
@@ -215,7 +245,7 @@ class ValveDevice extends EventEmitter {
                 break;
             case 0x02:
                 this.state = 'READY';
-                this.handleStatusReport(seq, payload);
+                this.handleStatusReport(seq, payload, gatewayId);
                 break;
             case 0x04:
                 this.handleEventReport(seq, payload);
@@ -272,14 +302,23 @@ class ValveDevice extends EventEmitter {
                 ch.lastSyncTime = now;
             }
 
-            pending.resolve({
-                channelIndex: pending.channelIndex,
-                status: state.stateText,
-                isRunning: state.isRunning,
-                remainingSeconds,
-                targetSeconds,
-                via: 'action-ack-0xA1'
-            });
+            if (pending.expectedRunning === state.isRunning) {
+                pending.resolve({
+                    channelIndex: pending.channelIndex,
+                    status: state.stateText,
+                    isRunning: state.isRunning,
+                    remainingSeconds,
+                    targetSeconds,
+                    via: 'action-ack-0xA1',
+                    gatewayId,
+                    confirmedAt: Date.now()
+                });
+            } else {
+                console.warn(
+                    `[Device ${this.valveId}] Action ACK did not confirm ${pending.actionText}; ` +
+                    `reported state is ${state.stateText}. Waiting for a matching response or retry.`
+                );
+            }
         }
 
         this._notifyStateChange('ACTION_ACK_0xA1');
@@ -322,7 +361,7 @@ class ValveDevice extends EventEmitter {
         });
     }
 
-    handleStatusReport(seq, payload) {
+    handleStatusReport(seq, payload, gatewayId = null) {
         if (!payload || payload.length < 15) {
             console.log(`[Device ${this.valveId}] Status report too short.`);
             return;
@@ -386,7 +425,9 @@ class ValveDevice extends EventEmitter {
                     isRunning: state.isRunning,
                     remainingSeconds,
                     targetSeconds: runtimeSeconds,
-                    via: 'status-report-0x02'
+                    via: 'status-report-0x02',
+                    gatewayId,
+                    confirmedAt: Date.now()
                 });
                 break;
             }
@@ -1068,6 +1109,7 @@ class ValveDevice extends EventEmitter {
                     fallbackToLegacySpam: !!txPolicy.fallbackToLegacySpam,
                     refreshTrigger: !!txPolicy.refreshTrigger,
                     listenWindowMs: txPolicy.listenWindowMs,
+                    responseMatcher: txPolicy.responseMatcher,
                 }
             );
         }
