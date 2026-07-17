@@ -274,6 +274,10 @@ class GatewayNode {
 
         if (line.startsWith('VERSION:')) {
             const versionInfo = this._parseVersionLine(line);
+            if (versionInfo.canonicalId && typeof this.hub.identifyGateway === 'function') {
+                this.hub.identifyGateway(this, versionInfo);
+                versionInfo.gatewayId = this.id;
+            }
             this.lastVersion = versionInfo;
 
             this.hub.emit('gatewayVersion', versionInfo);

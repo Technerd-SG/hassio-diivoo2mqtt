@@ -49,6 +49,21 @@ test('parses gateway MAC from current firmware VERSION response', () => {
     assert.equal(info.canonicalId, 'gw-aabbccddeeff');
 });
 
+test('publishes VERSION with the canonical gateway ID after identification', () => {
+    const { node, events } = createBareGateway();
+    node.hub.identifyGateway = (gateway, versionInfo) => {
+        assert.equal(versionInfo.canonicalId, 'gw-aabbccddeeff');
+        gateway.id = versionInfo.canonicalId;
+    };
+
+    node._processLine('VERSION:tcp_gateway_WG03:0.1.11:AABBCCDDEEFF');
+
+    assert.equal(node.id, 'gw-aabbccddeeff');
+    assert.equal(node.lastVersion.gatewayId, 'gw-aabbccddeeff');
+    assert.equal(events[0][0], 'gatewayVersion');
+    assert.equal(events[0][1].gatewayId, 'gw-aabbccddeeff');
+});
+
 test('allows initial radio tuning once the TCP socket is writable', async () => {
     const { node } = createBareGateway();
     const writes = [];

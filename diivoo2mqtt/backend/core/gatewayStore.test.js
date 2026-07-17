@@ -5,7 +5,7 @@ const os = require('os');
 const path = require('path');
 const GatewayStore = require('./gatewayStore');
 
-test('persists a manually added gateway before save returns', (t) => {
+test('persists all gateways atomically before save returns', (t) => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'diivoo-gateways-'));
     const filePath = path.join(dir, 'gateways.json');
     t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -17,6 +17,11 @@ test('persists a manually added gateway before save returns', (t) => {
             ip: '10.0.0.135',
             port: 8080,
         }],
+        ['diivoo-gw-aabbccddeeff', {
+            id: 'diivoo-gw-aabbccddeeff',
+            ip: '10.0.0.136',
+            port: 8080,
+        }],
     ]));
 
     assert.deepEqual(JSON.parse(fs.readFileSync(filePath, 'utf8')), [
@@ -25,6 +30,30 @@ test('persists a manually added gateway before save returns', (t) => {
             ip: '10.0.0.135',
             port: 8080,
         },
+        {
+            id: 'diivoo-gw-aabbccddeeff',
+            ip: '10.0.0.136',
+            port: 8080,
+        },
     ]);
     assert.equal(fs.existsSync(`${filePath}.tmp`), false);
+});
+
+test('deduplicates stored gateways by ID and ignores invalid entries', (t) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'diivoo-gateways-'));
+    const filePath = path.join(dir, 'gateways.json');
+    t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+    fs.writeFileSync(filePath, JSON.stringify([
+        { id: 'gw-aabbccddeeff', ip: '10.0.0.10', port: 8080 },
+        { id: '', ip: '10.0.0.11', port: 8080 },
+        { id: 'gw-invalid', ip: '', port: 8080 },
+        { id: 'gw-aabbccddeeff', ip: '10.0.0.12', port: 8080 },
+        { id: 'gw-bad-port', ip: '10.0.0.13', port: 70000 },
+    ]));
+
+    const store = new GatewayStore(filePath);
+    assert.deepEqual(store.load(), [
+        { id: 'gw-aabbccddeeff', ip: '10.0.0.12', port: 8080 },
+    ]);
 });
