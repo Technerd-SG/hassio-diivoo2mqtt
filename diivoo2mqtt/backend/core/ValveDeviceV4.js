@@ -24,6 +24,7 @@ class ValveDevice extends EventEmitter {
 
         this.state = 'OFFLINE';
         this.lastSeen = null;
+        this.lastCommandFailureAt = 0;
         this.lastRxSeq = null;
         this.lastRawHex = null;
 
@@ -68,8 +69,21 @@ class ValveDevice extends EventEmitter {
 
     get isOnline() {
         if (!this.lastSeen) return false;
+        if (this.lastCommandFailureAt && this.lastCommandFailureAt >= this.lastSeen) return false;
         const offlineThresholdMs = 12 * 60 * 60 * 1000;
         return (Date.now() - this.lastSeen) < offlineThresholdMs;
+    }
+
+    _markCommandFailure(err) {
+        this.lastCommandFailureAt = Date.now();
+        console.warn(
+            `[Device ${this.valveId}] Marking device unreachable after command failure: ${err.message}`
+        );
+        this._notifyStateChange('COMMAND_UNREACHABLE');
+    }
+
+    _shouldMarkCommandFailure(err) {
+        return !['ACQUIRE_TIMEOUT', 'QUEUE_OVERFLOW'].includes(err?.code);
     }
 
     valve(index) {
@@ -135,8 +149,10 @@ class ValveDevice extends EventEmitter {
             );
 
             const timeout = setTimeout(() => {
+                const err = new Error(`Timeout: No response (0xA1 or 0x02) from device for action ${actionText}`);
                 cleanup();
-                reject(new Error(`Timeout: No response (0xA1 or 0x02) from device for action ${actionText}`));
+                this._markCommandFailure(err);
+                reject(err);
             }, timeoutMs);
 
             this.pendingRequests.set(seq, {
@@ -161,6 +177,9 @@ class ValveDevice extends EventEmitter {
             ).catch(err => {
                 clearTimeout(timeout);
                 cleanup();
+                if (this._shouldMarkCommandFailure(err)) {
+                    this._markCommandFailure(err);
+                }
                 reject(err);
             });
         });
@@ -214,11 +233,17 @@ class ValveDevice extends EventEmitter {
 
     handleIncomingPacket(seq, cmd, payload, rawHex = '', gatewayId = 'default_gw', rssi = -100) {
         const now = Date.now();
+        const recoveredFromCommandFailure = this.lastCommandFailureAt > 0;
         this.lastSeen = now;
+        this.lastCommandFailureAt = 0;
         this.lastRxSeq = seq;
         this.lastRawHex = rawHex;
 
         this.gatewayStats.set(gatewayId, { rssi, lastSeen: now });
+
+        if (recoveredFromCommandFailure) {
+            this._notifyStateChange('COMMAND_REACHABLE');
+        }
 
         for (const [key, timestamp] of this.recentRxPackets.entries()) {
             if (now - timestamp > 5000) {
