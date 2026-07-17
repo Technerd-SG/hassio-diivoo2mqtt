@@ -634,6 +634,7 @@ class WebServer {
         );
 
         return {
+            displayName: typeof channel.displayName === 'string' ? channel.displayName : '',
             defaultOpenSeconds: durationSeconds,
             defaultOpenMinutes: Math.max(1, Math.round(durationSeconds / 60)),
             intervalOnSeconds: Math.max(1, Number(channel.settings.intervalOnSeconds) || 10),
@@ -647,6 +648,14 @@ class WebServer {
 
     _applyChannelConfig(device, channelId, config) {
         const channel = this._getChannelOrThrow(device, channelId);
+
+        if (Object.prototype.hasOwnProperty.call(config, 'displayName')) {
+            const displayName = config.displayName == null ? '' : String(config.displayName).trim();
+            if (displayName.length > 80) {
+                throw new Error('Valve name must be at most 80 characters.');
+            }
+            channel.displayName = displayName;
+        }
 
         if (config.defaultOpenSeconds != null || config.defaultOpenMinutes != null) {
             const seconds = config.defaultOpenSeconds != null

@@ -235,11 +235,15 @@ class MqttBridge {
 
         // Kanäle
         for (let ch = 1; ch <= channelCount; ch++) {
+            const customChannelName = typeof deviceLiveState.channels?.[ch]?.displayName === 'string'
+                ? deviceLiveState.channels[ch].displayName.trim()
+                : '';
+
             // Ventil
             this._publish(
                 `${discoveryPrefix}/switch/${valveId}_ch${ch}/config`,
                 JSON.stringify({
-                    name: t(this.strings, 'valve', { ch }),
+                    name: customChannelName || t(this.strings, 'valve', { ch }),
                     unique_id: `diivoo_${valveId}_valve_${ch}`,
                     state_topic: stateTopic,
                     command_topic: `diivoo/${valveId}/valve/${ch}/set`,
