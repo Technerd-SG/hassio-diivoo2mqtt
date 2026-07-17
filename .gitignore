@@ -28,6 +28,9 @@ coverage/
 .env
 .env.*
 !.env.example
+opencode.jsonc
+BUGS.md
+TODO.md
 
 # Archives
 *.tar
