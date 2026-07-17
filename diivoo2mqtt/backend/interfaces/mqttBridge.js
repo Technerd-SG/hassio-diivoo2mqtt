@@ -111,12 +111,13 @@ class MqttBridge {
     _getGatewayState(gatewayId) {
         if (!this.gatewayStates.has(gatewayId)) {
             this.gatewayStates.set(gatewayId, {
+                connected: false,
                 ledState: 'OFF',
                 buttonPressed: false,
                 version: '',
                 model: '',
-                connected: false,
-                lastUpdateTs: Date.now()
+                mac: '',
+                lastUpdateTs: 0,
             });
         }
         return this.gatewayStates.get(gatewayId);
@@ -157,6 +158,17 @@ class MqttBridge {
         }
 
         return null;
+    }
+
+    _normalizeDurationSeconds(value, fallback = 600) {
+        const fallbackNumber = Number(fallback);
+        const safeFallback = Number.isFinite(fallbackNumber) && fallbackNumber > 0
+            ? Math.min(0xFFFF, Math.round(fallbackNumber))
+            : 600;
+        const duration = Number(value);
+
+        if (!Number.isFinite(duration) || duration <= 0) return safeFallback;
+        return Math.min(0xFFFF, Math.round(duration));
     }
 
     _publish(topic, payload, options = { retain: true }) {
@@ -342,11 +354,18 @@ class MqttBridge {
         const stateTopic = `diivoo/gateway/${gatewayId}/state`;
         const discoveryPrefix = this.discoveryPrefix;
 
+        // Verwende MAC als stabile Geräte-ID, damit manuell + mDNS dasselbe HA-Gerät ergeben
+        const mac = (gwState.mac || '').replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+        const stableGwId = mac.length === 12 ? mac.toLowerCase() : gatewayId;
+        const macColon = mac.length === 12 ? mac.match(/.{2}/g).join(':') : null;
+
         const deviceBase = {
-            identifiers: [`diivoo_gateway_${gatewayId}`],
-            name: `Diivoo Gateway ${gatewayId}`,
+            identifiers: [`diivoo_gateway_${stableGwId}`],
+            ...(macColon ? { connections: [['mac', macColon]] } : {}),
+            name: `Diivoo Gateway ${stableGwId}`,
             manufacturer: 'Diivoo Custom Hub',
-            model: gwState.model || 'Custom Gateway'
+            model: gwState.model || 'Custom Gateway',
+            sw_version: gwState.version || undefined,
         };
 
         // LED als Light
@@ -511,6 +530,7 @@ class MqttBridge {
             buttonPressed: !!gwState.buttonPressed,
             version: gwState.version || '',
             model: gwState.model || '',
+            mac: gwState.mac || '',
             lastUpdate: new Date(gwState.lastUpdateTs || Date.now()).toISOString()
         };
 
@@ -538,10 +558,11 @@ class MqttBridge {
     }
 
     handleGatewayVersion(ev) {
-        const { gatewayId, version, model } = ev;
+        const { gatewayId, version, model, mac } = ev;
         const gwState = this._getGatewayState(gatewayId);
         gwState.version = version || gwState.version;
         gwState.model = model || gwState.model;
+        gwState.mac = mac || gwState.mac;
         gwState.lastUpdateTs = Date.now();
 
         this.publishGatewayState(gatewayId);
@@ -639,13 +660,17 @@ class MqttBridge {
             const device = this.hub.devices.get(valveId);
             if (!device) return;
 
+            const channel = device.channels?.[channelId];
+            if (!channel) return;
+
+            const defaultDuration = this._normalizeDurationSeconds(channel.settings?.durationSeconds);
             const parsed = this._safeJsonParse(raw);
             const simpleState = this._extractOnOff(raw);
 
             try {
                 if (parsed && typeof parsed === 'object' && parsed.state) {
                     if (String(parsed.state).toUpperCase() === 'ON') {
-                        const duration = parsed.duration || 600;
+                        const duration = this._normalizeDurationSeconds(parsed.duration, defaultDuration);
                         await device.valve(channelId).on(duration);
                     } else if (String(parsed.state).toUpperCase() === 'OFF') {
                         await device.valve(channelId).off();
@@ -654,7 +679,7 @@ class MqttBridge {
                 }
 
                 if (simpleState === 'ON') {
-                    await device.valve(channelId).on(600);
+                    await device.valve(channelId).on(defaultDuration);
                 } else if (simpleState === 'OFF') {
                     await device.valve(channelId).off();
                 }
@@ -788,10 +813,9 @@ class MqttBridge {
 
             if (messageStr === 'INSTALL') {
                 if (this.hub.otaManager) {
-                    const port = process.env.WEB_PORT || 8099;
                     console.log(`[MQTT] Triggering OTA update for ${gatewayId} via Home Assistant`);
                     // in_progress / Status-Updates kommen jetzt über gatewayOtaStatus Events vom ESP32
-                    this.hub.otaManager.triggerUpdate(gatewayId, null, port).catch(err => {
+                    this.hub.otaManager.triggerUpdate(gatewayId).catch(err => {
                         console.error(`[MQTT] OTA error: ${err.message}`);
                     });
                 }
