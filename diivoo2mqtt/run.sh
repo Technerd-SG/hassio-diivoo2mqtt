@@ -2,6 +2,7 @@
 set -e
 
 export WEB_PORT=8099
+export FIRMWARE_VERSIONS_URL="https://raw.githubusercontent.com/Technerd-SG/hassio-diivoo2mqtt/nightly/firmware/versions.json"
 export MQTT_BROKER="mqtt://$(bashio::config 'mqtt_host'):$(bashio::config 'mqtt_port')"
 export MQTT_USER="$(bashio::config 'mqtt_username')"
 export MQTT_PASSWORD="$(bashio::config 'mqtt_password')"
