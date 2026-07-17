@@ -442,19 +442,25 @@ class GatewayNode {
         });
     }
 
-    async probeAddonIp(port) {
-        let address = String(this.client?.localAddress || '').trim();
+    async probeAddonIp(port, preferredHost = null) {
+        let address = String(preferredHost || this.client?.localAddress || '').trim();
         if (address.startsWith('::ffff:')) address = address.slice(7);
+        if (address.startsWith('[') && address.endsWith(']')) address = address.slice(1, -1);
 
-        if (!address || address === '0.0.0.0' || address === '::') {
-            throw new Error(`Could not determine the add-on IP used to reach gateway '${this.id}'.`);
+        if (
+            !address ||
+            address === '0.0.0.0' ||
+            address === '::' ||
+            /[\s/]/.test(address)
+        ) {
+            throw new Error(`Could not determine a valid add-on host for gateway '${this.id}'.`);
         }
 
         const host = address.includes(':') ? `[${address}]` : address;
         const healthUrl = `http://${host}:${port}/api/health`;
 
         await this._sendControl(`PING_URL:${healthUrl}`, {
-            timeoutMs: 5000,
+            timeoutMs: 10000,
             match: (line) => line === 'ACK:PING_OK',
         });
 

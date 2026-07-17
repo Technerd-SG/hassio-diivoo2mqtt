@@ -14,6 +14,9 @@ Optionaler MQTT-Benutzername
 ### mqtt_password
 Optionales MQTT-Passwort
 
+### ota_host
+Optionale LAN-IP-Adresse oder lokaler Hostname des Home-Assistant-Hosts, zum Beispiel `10.0.0.10`. Diese Adresse wird vom ESP32 verwendet, um OTA-Firmware über Port 8099 abzurufen. Ohne Angabe versucht das Add-on, die Adresse automatisch aus der TCP-Verbindung abzuleiten; in einer Docker-Bridge kann das eine für den ESP32 unerreichbare `172.x.x.x`-Adresse sein.
+
 ### gateway_id
 ID des DIIVOO Gateways, z. B. `gw1`
 
