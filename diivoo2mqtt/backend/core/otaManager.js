@@ -149,16 +149,26 @@ class OtaManager extends EventEmitter {
         }
 
         // Lass den ESP32 aktiv die erreichbare IP herausfinden
-        const port = localServerPort || process.env.WEB_PORT || 8099;
+        const port = Number(
+            localServerPort ||
+            this.hub.config?.webPort ||
+            process.env.PORT ||
+            process.env.WEB_PORT ||
+            3000
+        );
+        if (!Number.isInteger(port) || port < 1 || port > 65535) {
+            throw new Error(`Invalid OTA server port: ${port}`);
+        }
         console.log(`[OTA] Sending IP probe to gateway ${gatewayId}...`);
         const addonIp = await gw.probeAddonIp(port);
 
-        const otaUrl = `http://${addonIp}:${port}/ota/${localFileName}`;
+        const otaHost = addonIp.includes(':') ? `[${addonIp}]` : addonIp;
+        const otaUrl = `http://${otaHost}:${port}/api/ota/${encodeURIComponent(localFileName)}`;
         console.log(`[OTA] Sending update command to gateway ${gatewayId}: ${otaUrl}`);
 
         if (gw.isConnected) {
             gw.otaPendingVersion = latest.version; // Merken, auf welche Version wir updaten
-            gw.sendOta(otaUrl);
+            await gw.sendOta(otaUrl);
             return true;
         } else {
             throw new Error('Gateway is not connected');

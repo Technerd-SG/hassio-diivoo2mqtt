@@ -35,4 +35,7 @@ COPY run.sh /run.sh
 
 RUN chmod a+x /run.sh
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "const port=process.env.PORT||process.env.WEB_PORT||3000;fetch('http://127.0.0.1:'+port+'/health').then(r=>{if(!r.ok)throw Error(r.status)}).catch(()=>process.exit(1))"
+
 CMD ["/run.sh"]

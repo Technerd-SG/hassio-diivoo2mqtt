@@ -23,6 +23,7 @@ class GatewayNode {
         this.lastSeenAt = 0;
         this.heartbeatInterval = null;
         this.pendingHeartbeat = null;
+        this.reconnectTimer = null;
         this.lastDisconnectReason = 'unknown';
 
         this.isConnected = false;
@@ -45,6 +46,13 @@ class GatewayNode {
     }
 
     _initSocket() {
+        if (this.isDestroyed) return;
+
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
+
         if (this.rl) {
             this.rl.removeAllListeners();
             this.rl.close();
@@ -79,12 +87,23 @@ class GatewayNode {
                 console.error(`[!] Initial TUNE for gateway '${this.id}' failed: ${err.message}`);
             }
 
+            // Version abfragen BEVOR wir connected melden, damit MAC für MQTT Discovery bekannt ist
+            try {
+                await this.getVersion({ allowDuringInit: true });
+            } catch (err) {
+                console.error(`[!] Initial VERSION query for gateway '${this.id}' failed: ${err.message}`);
+            }
+
+            // The socket may have closed while an initialization command was pending.
+            if (this.isDestroyed || !this.client || this.client.destroyed || !this.client.writable) {
+                console.warn(`[Gateway ${this.id}] Connection closed during initialization.`);
+                return;
+            }
+
             this._setConnectionState(true, 'tcp-connected');
             this._startHeartbeatMonitor();
 
             console.log(`[+] Gateway '${this.id}' ready.`);
-
-            this.getVersion().catch(() => { });
         });
 
         this.rl = readline.createInterface({
@@ -123,21 +142,23 @@ class GatewayNode {
                 this.pendingHeartbeat = null;
             }
 
-            this.hub.emit('gatewayConnection', {
-                gatewayId: this.id,
-                connected: false,
-                ts: Date.now(),
-            });
-
             this._rejectPendingIo(new Error('Connection lost'));
 
-            setTimeout(() => this._initSocket(), 5000);
+            this.reconnectTimer = setTimeout(() => {
+                this.reconnectTimer = null;
+                this._initSocket();
+            }, 5000);
         });
     }
 
     destroy() {
         this.isDestroyed = true;
         this._stopHeartbeatMonitor();
+
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
 
         if (this.pendingHeartbeat) {
             clearTimeout(this.pendingHeartbeat.timeout);
@@ -204,6 +225,12 @@ class GatewayNode {
                 status: line,
                 ts: Date.now(),
             });
+
+            if (this.pendingControl?.match(line)) {
+                this.pendingControl.resolve(line);
+            } else if (line.startsWith('ERR:OTA_') && this.pendingControl) {
+                this.pendingControl.reject(new Error(line));
+            }
             return;
         }
 
@@ -311,15 +338,28 @@ class GatewayNode {
         );
     }
 
+    _normalizeMac(value) {
+        const clean = String(value || '').replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+        return clean.length === 12 ? clean : null;
+    }
+
     _parseVersionLine(line) {
         const parts = line.split(':');
         const model = parts[1] || null;
-        const version = parts.length > 2 ? parts.slice(2).join(':') : null;
+        const version = parts[2] || null;
+
+        // VERSION:model:version[:mac]
+        let mac = null;
+        if (parts.length >= 4) {
+            mac = this._normalizeMac(parts.slice(3).join(''));
+        }
 
         return {
             gatewayId: this.id,
             model,
             version,
+            mac,
+            canonicalId: mac ? `gw-${mac.toLowerCase()}` : null,
             raw: line,
             ts: Date.now(),
         };
@@ -330,10 +370,11 @@ class GatewayNode {
             timeoutMs = 1500,
             match = null,
             transform = null,
+            allowDuringInit = false,
         } = options;
 
         return new Promise((resolve, reject) => {
-            if (!this.isConnected) {
+            if (!this.isConnected && !allowDuringInit) {
                 return reject(new Error(`Gateway '${this.id}' is offline.`));
             }
 
@@ -393,25 +434,48 @@ class GatewayNode {
         });
     }
 
-    getVersion() {
+    getVersion(options = {}) {
         return this._sendControl('VERSION', {
             timeoutMs: 2000,
             match: (line) => line.startsWith('VERSION:'),
+            ...options,
         });
+    }
+
+    async probeAddonIp(port) {
+        let address = String(this.client?.localAddress || '').trim();
+        if (address.startsWith('::ffff:')) address = address.slice(7);
+
+        if (!address || address === '0.0.0.0' || address === '::') {
+            throw new Error(`Could not determine the add-on IP used to reach gateway '${this.id}'.`);
+        }
+
+        const host = address.includes(':') ? `[${address}]` : address;
+        const healthUrl = `http://${host}:${port}/api/health`;
+
+        await this._sendControl(`PING_URL:${healthUrl}`, {
+            timeoutMs: 5000,
+            match: (line) => line === 'ACK:PING_OK',
+        });
+
+        return address;
     }
 
     sendOta(url) {
         return this._sendControl(`OTA:${url}`, {
-            timeoutMs: 2000,
+            timeoutMs: 5000,
             match: (line) =>
-                line === 'ACK:OTA_STARTING' ||
-                line === 'ACK:OTA_OK',
+                line === 'ACK:OTA_START' ||
+                line === 'ACK:OTA_OK' ||
+                line === 'ACK:OTA_NO_UPDATES',
         });
     }
 
     _configureRadio(txChannel, rxChannel = 0, txProfile = 'short') {
         return new Promise((resolve, reject) => {
-            if (!this.isConnected && this.client) {
+            // During the connect callback the TCP socket is writable before the
+            // gateway is intentionally announced as connected.
+            if (!this.client || this.client.destroyed || !this.client.writable) {
                 return reject(new Error(`Gateway '${this.id}' is offline.`));
             }
             if (this.pendingTune) return reject(new Error('TUNE already in progress.'));

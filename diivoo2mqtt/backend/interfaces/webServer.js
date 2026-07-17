@@ -4,13 +4,17 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 
+const MAX_PROTOCOL_DURATION_SECONDS = 0xFFFF;
+const MAX_PROTOCOL_DURATION_MINUTES = Math.floor(MAX_PROTOCOL_DURATION_SECONDS / 60);
+
 class WebServer {
     constructor(hub, config) {
         this.hub = hub;
         this.app = express();
         this.server = http.createServer(this.app);
 
-        this.otaDir = config.otaDir || path.join(__dirname, '../ota');
+        this.port = config.port;
+        this.otaDir = config.otaDir || this.hub.otaManager?.otaDir || path.join(__dirname, '../public/ota');
         this.otaBaseUrl = (config.otaBaseUrl || process.env.OTA_BASE_URL || '').replace(/\/+$/, '');
 
         const isDev = process.env.NODE_ENV !== 'production';
@@ -22,8 +26,12 @@ class WebServer {
             }
         } : {});
 
+        this.app.get('/health', (_req, res) => {
+            res.json({ status: 'ok', timestamp: Date.now() });
+        });
+
         this.app.get('/api/health', (_req, res) => {
-            res.json({ ok: true });
+            res.json({ status: 'ok', timestamp: Date.now() });
         });
 
         this.app.get('/api/runtime-config', (req, res) => {
@@ -135,6 +143,7 @@ class WebServer {
                     isConnected: gw.isConnected,
                     version: gw.lastVersion?.version || null,
                     model: gw.lastVersion?.model || null,
+                    mac: gw.lastVersion?.mac || null,
                     lastSeenAt: gw.lastSeenAt,
                     otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
                 });
@@ -170,6 +179,7 @@ class WebServer {
                         isConnected: gw.isConnected,
                         version: gw.lastVersion?.version || null,
                         model: gw.lastVersion?.model || null,
+                        mac: gw.lastVersion?.mac || null,
                         lastSeenAt: gw.lastSeenAt,
                         otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
                     });
@@ -181,21 +191,7 @@ class WebServer {
 
             socket.on('triggerOtaUpdate', ({ gatewayId }) => {
                 if (this.hub.otaManager) {
-                    const os = require('os');
-                    let addonIp = '127.0.0.1';
-                    const interfaces = os.networkInterfaces();
-                    for (const name of Object.keys(interfaces)) {
-                        for (const net of interfaces[name]) {
-                            if (net.family === 'IPv4' && !net.internal) {
-                                addonIp = net.address;
-                                break;
-                            }
-                        }
-                    }
-
-                    const port = process.env.WEB_PORT || 8099;
-
-                    this.hub.otaManager.triggerUpdate(gatewayId, addonIp, port).catch(err => {
+                    this.hub.otaManager.triggerUpdate(gatewayId).catch(err => {
                         console.error(`[Web] OTA error: ${err.message}`);
                     });
                 }
@@ -263,7 +259,15 @@ class WebServer {
                     let result = null;
 
                     if (state === 'ON') {
-                        const seconds = Math.max(1, Number(duration) || 600);
+                        const channel = this._getChannelOrThrow(device, Number(channelId));
+                        const requestedDuration = Number(duration);
+                        const defaultDuration = Number(channel.settings.durationSeconds);
+                        const seconds = Number.isFinite(requestedDuration) && requestedDuration > 0
+                            ? Math.min(MAX_PROTOCOL_DURATION_SECONDS, Math.round(requestedDuration))
+                            : Math.min(
+                                MAX_PROTOCOL_DURATION_SECONDS,
+                                Math.max(1, Number.isFinite(defaultDuration) ? Math.round(defaultDuration) : 600)
+                            );
                         result = await device.valve(Number(channelId)).on(seconds);
                     } else if (state === 'OFF') {
                         result = await device.valve(Number(channelId)).off();
@@ -369,6 +373,7 @@ class WebServer {
                         : [];
 
                     channel.schedules = normalizedSchedules;
+                    this.hub.deviceStore.save(this.hub.devices);
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'schedules-save');
 
@@ -421,6 +426,7 @@ class WebServer {
                     } else {
                         channel.schedules.push(normalizedSchedule);
                     }
+                    this.hub.deviceStore.save(this.hub.devices);
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'schedule-save');
 
@@ -464,6 +470,7 @@ class WebServer {
                     const before = Array.isArray(channel.schedules) ? channel.schedules.length : 0;
                     channel.schedules = (channel.schedules || []).filter((item) => item.id !== scheduleId);
                     const after = channel.schedules.length;
+                    this.hub.deviceStore.save(this.hub.devices);
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'schedule-delete');
 
@@ -572,6 +579,7 @@ class WebServer {
                     isConnected: gw.isConnected,
                     version: gw.lastVersion?.version || null,
                     model: gw.lastVersion?.model || null,
+                    mac: gw.lastVersion?.mac || null,
                     lastSeenAt: gw.lastSeenAt,
                     otaUpdate: this.hub.otaManager ? this.hub.otaManager.getUpdateInfo(gw.id) : null
                 });
@@ -581,8 +589,8 @@ class WebServer {
 
         this.hub.on('diagnosticLogsUpdate', broadcastDiagnosticSummary);
 
-        this.server.listen(config.port, '0.0.0.0', () => {
-            console.log(`[Web] Frontend running on port ${config.port}`);
+        this.server.listen(this.port, '0.0.0.0', () => {
+            console.log(`[Web] Frontend running on port ${this.port}`);
         });
     }
 
@@ -610,7 +618,11 @@ class WebServer {
 
     _serializeChannelConfig(device, channelId) {
         const channel = this._getChannelOrThrow(device, channelId);
-        const durationSeconds = Math.max(1, Number(channel.settings.durationSeconds) || 600);
+        const rawDurationSeconds = Number(channel.settings.durationSeconds);
+        const durationSeconds = Math.min(
+            MAX_PROTOCOL_DURATION_SECONDS,
+            Math.max(1, Number.isFinite(rawDurationSeconds) ? Math.round(rawDurationSeconds) : 600)
+        );
 
         return {
             defaultOpenSeconds: durationSeconds,
@@ -636,7 +648,7 @@ class WebServer {
                 throw new Error('Invalid default open duration');
             }
 
-            channel.settings.durationSeconds = Math.min(24 * 60 * 60, Math.round(seconds));
+            channel.settings.durationSeconds = Math.min(MAX_PROTOCOL_DURATION_SECONDS, Math.round(seconds));
         }
 
         if (config.intervalOnSeconds != null) {
@@ -683,11 +695,21 @@ class WebServer {
 
     _normalizeSchedule(schedule) {
         const mode = schedule.mode === 'mist' ? 'mist' : 'normal';
-        const startTime = typeof schedule.startTime === 'string' && /^\d{2}:\d{2}$/.test(schedule.startTime)
+        const startMatch = typeof schedule.startTime === 'string'
+            ? schedule.startTime.match(/^(\d{2}):(\d{2})$/)
+            : null;
+        const startTime = startMatch && Number(startMatch[1]) <= 23 && Number(startMatch[2]) <= 59
             ? schedule.startTime
             : '06:00';
 
-        const durationMinutes = Math.max(1, Math.min(1440, Number(schedule.durationMinutes) || 10));
+        const rawDurationMinutes = Number(schedule.durationMinutes);
+        const durationMinutes = Math.max(
+            1,
+            Math.min(
+                MAX_PROTOCOL_DURATION_MINUTES,
+                Number.isFinite(rawDurationMinutes) ? Math.round(rawDurationMinutes) : 10
+            )
+        );
         const repeat = ['daily', 'odd', 'even', 'custom'].includes(schedule.repeat)
             ? schedule.repeat
             : 'daily';

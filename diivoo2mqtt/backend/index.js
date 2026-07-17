@@ -5,8 +5,14 @@ const WebServer = require('./interfaces/webServer');
 
 console.log("Starting Diivoo Custom Hub...");
 
+const requestedWebPort = Number(process.env.PORT || process.env.WEB_PORT || 3000);
+const webPort = Number.isInteger(requestedWebPort) && requestedWebPort > 0 && requestedWebPort <= 65535
+    ? requestedWebPort
+    : 3000;
+
 const myHubConfig = {
     id: 16926055,
+    webPort,
     features: {
         idleTxChannel: 4,
         idleRxChannel: 0,
@@ -31,7 +37,8 @@ const mqttBridge = new MqttBridge(hub, {
 });
 
 const webServer = new WebServer(hub, {
-    port: Number(process.env.WEB_PORT || 8099)
+    port: webPort,
+    otaDir: hub.otaManager?.otaDir,
 });
 
 let isShuttingDown = false;

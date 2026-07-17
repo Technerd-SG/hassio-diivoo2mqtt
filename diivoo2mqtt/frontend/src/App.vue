@@ -485,7 +485,7 @@
                     class="theme-input min-h-11 w-full rounded-xl border px-3"
                     type="number"
                     min="1"
-                    max="1440"
+                    max="1092"
                     step="1"
                     inputmode="numeric"
                   />
@@ -601,7 +601,7 @@
                     class="theme-input min-h-11 w-full rounded-xl border px-3"
                     type="number"
                     min="1"
-                    max="1440"
+                    max="1092"
                     step="1"
                     inputmode="numeric"
                   />
@@ -1367,7 +1367,7 @@ function toggleWeekday(day) {
 
 function addPlanToEditor() {
   const startTime = planForm.startTime || '06:00'
-  const durationMinutes = Math.max(1, Math.min(1440, Number(planForm.durationMinutes) || 10))
+  const durationMinutes = Math.max(1, Math.min(1092, Number(planForm.durationMinutes) || 10))
   const mistOnSeconds = Math.max(1, Math.min(3600, Number(planForm.mistOnSeconds) || 10))
   const mistOffSeconds = Math.max(1, Math.min(3600, Number(planForm.mistOffSeconds) || 30))
 
@@ -1532,7 +1532,7 @@ function saveChannelConfig() {
   const config = getActiveConfig()
   if (!config || !activeChannel.value) return
 
-  config.defaultOpenMinutes = Math.max(1, Math.min(1440, Number(configDraft.defaultOpenMinutes) || 10))
+  config.defaultOpenMinutes = Math.max(1, Math.min(1092, Number(configDraft.defaultOpenMinutes) || 10))
   config.rainStopUntil = configDraft.rainStopUntil || ''
 
   socket.emit('saveChannelConfig', {
