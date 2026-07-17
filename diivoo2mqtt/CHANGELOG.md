@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Added per-channel naming support. Thanks to @sevensolutions for PR #27 and to @bumpitdowntheroad for requesting and detailing the feature in issue #26.
+
 ## 0.1.0
 - Erste veröffentlichte Version
 - Node.js Backend mit MQTT Bridge
