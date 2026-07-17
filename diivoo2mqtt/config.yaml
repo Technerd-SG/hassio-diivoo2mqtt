@@ -1,5 +1,5 @@
 name: "Diivoo2MQTT Nightly"
-version: "0.1.59-dev.9"
+version: "0.1.59-dev.10"
 slug: "diivoo2mqtt_nightly"
 description: "Experimental Diivoo2MQTT builds for testing upcoming fixes and features"
 stage: experimental
