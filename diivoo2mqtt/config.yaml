@@ -1,7 +1,8 @@
-name: "Diivoo2MQTT"
-version: "0.1.58"
-slug: "diivoo2mqtt"
-description: "A Home Assistant add-on for running DIIVOO water timers locally over MQTT "
+name: "Diivoo2MQTT Nightly"
+version: "0.1.59-dev.1"
+slug: "diivoo2mqtt_nightly"
+description: "Experimental Diivoo2MQTT builds for testing upcoming fixes and features"
+stage: experimental
 url: "https://github.com/Technerd-SG/hassio-diivoo2mqtt"
 init: false
 startup: application
@@ -20,7 +21,7 @@ arch:
 ingress: true
 ingress_port: 8099
 panel_icon: mdi:water-pump
-panel_title: Diivoo2MQTT
+panel_title: Diivoo2MQTT Nightly
 
 ports:
   8099/tcp: 8099
