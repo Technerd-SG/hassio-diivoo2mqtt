@@ -164,6 +164,7 @@ class ValveDevice extends EventEmitter {
 
         for (let i = 1; i <= count; i++) {
             this.channels[i] = {
+                displayName: '',
                 status: 'AUS',
                 isRunning: false,
                 remaining: 0,
@@ -1168,6 +1169,7 @@ class ValveDevice extends EventEmitter {
             }
 
             liveChannels[i] = {
+                displayName: typeof ch.displayName === 'string' ? ch.displayName : '',
                 status: liveStatus,
                 isRunning: liveIsRunning,
                 remainingLive: currentRemaining,
