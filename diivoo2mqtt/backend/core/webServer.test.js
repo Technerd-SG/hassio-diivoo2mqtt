@@ -44,6 +44,22 @@ test('allows clearing a channel display name', () => {
     assert.equal(device.channels[1].displayName, '');
 });
 
+test('queues config refreshes through the device serializer', async () => {
+    const server = createContext();
+    const calls = [];
+    const device = {
+        valveId: 123,
+        queueConfigRefresh: async (reason) => {
+            calls.push(reason);
+            return [{ cmd: 0x05 }];
+        },
+    };
+
+    await server._triggerDeviceRefresh(device, 1, 'schedule-save');
+
+    assert.deepEqual(calls, ['schedule-save']);
+});
+
 test('rejects channel display names longer than 80 characters', () => {
     const server = createContext();
     const device = createDevice();

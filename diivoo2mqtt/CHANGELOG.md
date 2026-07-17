@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Serialized per-device configuration refreshes so rapid schedule or rain-delay changes cannot start overlapping device pulls. Thanks to @briodan for the protocol investigation in issue #4.
 - Aligned device card headers consistently with gateway cards. Thanks to @briodan for PR #21.
 - Added stable MAC-based gateway identity, persistence for mDNS-discovered gateways, DHCP address migration, and cleanup of provisional Home Assistant entities. Thanks to @briodan for PR #16 and the detailed investigation in issue #11.
 - Added per-channel naming support. Thanks to @sevensolutions for PR #27 and to @bumpitdowntheroad for requesting and detailing the feature in issue #26.

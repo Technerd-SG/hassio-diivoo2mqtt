@@ -810,8 +810,11 @@ class MqttBridge {
 
             device._notifyStateChange('rain-delay-mqtt');
 
-            device.sendPingTrigger(null, 2, 0x03).catch(err => {
-                console.error(`[MQTT] Rain delay ping failed for valve ${valveId}: ${err.message}`);
+            const refresh = typeof device.queueConfigRefresh === 'function'
+                ? device.queueConfigRefresh('rain-delay-mqtt')
+                : device.sendPingTrigger(null, 2, 0x03);
+            refresh.catch(err => {
+                console.error(`[MQTT] Rain delay config refresh failed for valve ${valveId}: ${err.message}`);
             });
 
             return;

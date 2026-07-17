@@ -58,6 +58,8 @@ class ValveDevice extends EventEmitter {
         this.lastBatteryText = options.lastBatteryText ?? 'Unbekannt';
 
         this.trys_refresh_trigger = 0;
+        this.configRefreshQueue = Promise.resolve();
+        this.activeConfigRefresh = null;
 
         // Kanalstatus
         this.channels = {};
@@ -519,6 +521,8 @@ class ValveDevice extends EventEmitter {
     }
 
     handleParameterRequest(seq, payload) {
+        this._markConfigPullActivity(0x05);
+
         // Falls das Ventil im payload[1] verrät, für welchen Kanal es Parameter will, 
         // könnten wir das hier auslesen. Wenn nicht, senden wir Standardmäßig für Kanal 1.
         const channelIndex = payload.length > 1 ? this.normalizeValveIndex(payload[1]) || 1 : 1;
@@ -528,6 +532,8 @@ class ValveDevice extends EventEmitter {
     }
 
     handleScheduleRequest(seq, payload) {
+        this._markConfigPullActivity(0x06);
+
         const rawChannelIndex = payload[1];
         const pageRequested = payload[2]; // Welche Seite will das Ventil?
         const valveIndex = this.normalizeValveIndex(rawChannelIndex);
@@ -846,6 +852,82 @@ class ValveDevice extends EventEmitter {
     sendEmptyPlanResponse(seq) {
         const payload = [0x00];
         return this.sendHubPacket(seq, 0x86, payload, 'Empty schedule (0x86)', this.getDownlinkChannel(), this.getDefaultListenChannel());
+    }
+
+    _markConfigPullActivity(command) {
+        if (!this.activeConfigRefresh) return;
+
+        this.activeConfigRefresh.lastActivityAt = Date.now();
+        this.activeConfigRefresh.requestCount++;
+        this.activeConfigRefresh.lastCommand = command;
+    }
+
+    queueConfigRefresh(reason = 'config-change', options = {}) {
+        const task = this.configRefreshQueue
+            .catch(() => {})
+            .then(() => this._runConfigRefresh(reason, options));
+
+        // Keep the queue usable after a failed refresh while returning the
+        // original task (including its error) to the caller.
+        this.configRefreshQueue = task.catch(() => {});
+        return task;
+    }
+
+    async _runConfigRefresh(reason, options = {}) {
+        const quietMs = Number.isInteger(options.quietMs) && options.quietMs >= 0
+            ? options.quietMs
+            : 3000;
+        const maxWaitMs = Number.isInteger(options.maxWaitMs) && options.maxWaitMs > 0
+            ? options.maxWaitMs
+            : 20000;
+        const maxRetransmits = Number.isInteger(options.maxRetransmits) && options.maxRetransmits >= 0
+            ? options.maxRetransmits
+            : 2;
+        const tracker = {
+            reason,
+            startedAt: Date.now(),
+            lastActivityAt: 0,
+            requestCount: 0,
+            lastCommand: null,
+        };
+
+        this.activeConfigRefresh = tracker;
+        console.log(`[Device ${this.valveId}] Starting serialized config refresh (${reason}).`);
+
+        try {
+            const followUps = await this.sendPingTrigger(null, maxRetransmits, 0x03);
+
+            if ((!Array.isArray(followUps) || followUps.length === 0) && tracker.requestCount === 0) {
+                return followUps;
+            }
+
+            if (tracker.lastActivityAt === 0) {
+                tracker.lastActivityAt = Date.now();
+            }
+
+            while (Date.now() - tracker.startedAt < maxWaitMs) {
+                const idleMs = Date.now() - tracker.lastActivityAt;
+                if (idleMs >= quietMs) {
+                    console.log(
+                        `[Device ${this.valveId}] Config refresh complete after ` +
+                        `${tracker.requestCount} request(s) (${reason}).`
+                    );
+                    return followUps;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, Math.min(100, quietMs - idleMs)));
+            }
+
+            console.warn(
+                `[Device ${this.valveId}] Config refresh wait limit reached after ` +
+                `${tracker.requestCount} request(s) (${reason}).`
+            );
+            return followUps;
+        } finally {
+            if (this.activeConfigRefresh === tracker) {
+                this.activeConfigRefresh = null;
+            }
+        }
     }
 
     async sendRefreshTrigger(correlationToken = null) {

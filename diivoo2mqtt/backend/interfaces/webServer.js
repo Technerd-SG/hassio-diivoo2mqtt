@@ -701,11 +701,12 @@ class WebServer {
     }
 
     async _triggerDeviceRefresh(device, channelId, reason = 'config-change') {
-        if (!device || typeof device.sendPingTrigger !== 'function') {
-            return;
-        }
-        console.log(`[Web] Sending config-refresh ping (0x20/03) to valve ${device.valveId}, channel ${channelId} due to ${reason}`);
-        const followUps = await device.sendPingTrigger(null, 2, 0x03);
+        if (!device) return;
+
+        console.log(`[Web] Queueing config-refresh ping (0x20/03) for valve ${device.valveId}, channel ${channelId} due to ${reason}`);
+        const followUps = typeof device.queueConfigRefresh === 'function'
+            ? await device.queueConfigRefresh(reason)
+            : await device.sendPingTrigger(null, 2, 0x03);
         if (Array.isArray(followUps) && followUps.length > 0) {
             console.log(`[Web] Config refresh triggered on valve ${device.valveId} - device is pulling updated config.`);
         } else {
