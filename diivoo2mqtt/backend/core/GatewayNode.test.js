@@ -8,7 +8,10 @@ function createBareGateway() {
     Object.assign(node, {
         id: 'test-gateway',
         client: { destroyed: false, writable: true, write() {} },
-        hub: { emit: (...args) => events.push(args) },
+        hub: {
+            emit: (...args) => events.push(args),
+            processIncomingRadioPacket() {},
+        },
         isConnected: false,
         pendingHeartbeat: null,
         pendingTune: null,
@@ -19,6 +22,20 @@ function createBareGateway() {
         lastSeenAt: 0,
     });
     return { node, events };
+}
+
+function createRxLine({ senderId = 0x01020304, seq = 1, cmd, payload = [] }) {
+    const bytes = new Array(12 + payload.length).fill(0);
+    bytes[5] = senderId & 0xFF;
+    bytes[6] = (senderId >> 8) & 0xFF;
+    bytes[7] = (senderId >> 16) & 0xFF;
+    bytes[8] = (senderId >> 24) & 0xFF;
+    bytes[9] = seq;
+    bytes[10] = cmd;
+    bytes[11] = payload.length;
+    bytes.splice(12, payload.length, ...payload);
+    const hex = bytes.map((value) => value.toString(16).padStart(2, '0')).join('').toUpperCase();
+    return `RX:4:0:-50:${hex}`;
 }
 
 test('parses gateway MAC from current firmware VERSION response', () => {
@@ -79,6 +96,27 @@ test('OTA start acknowledgement resolves the pending control command', () => {
     assert.equal(events[0][1].gatewayId, 'test-gateway');
     assert.equal(events[0][1].status, 'ACK:OTA_START');
     assert.equal(typeof events[0][1].ts, 'number');
+});
+
+test('waits past unrelated target-device traffic until the response matcher accepts a packet', async () => {
+    const { node } = createBareGateway();
+    const waiting = node._waitForInbound(
+        0x01020304,
+        100,
+        null,
+        (inbound) => inbound.cmd === 0xA1 && inbound.seq === 7
+    );
+
+    node._processLine(createRxLine({ cmd: 0x02, seq: 6, payload: new Array(15).fill(0) }));
+    assert.ok(node.pendingInboundWait, 'unrelated packet must not stop retries');
+
+    node._processLine(createRxLine({ cmd: 0xA1, seq: 7, payload: new Array(13).fill(0) }));
+    const inbound = await waiting;
+
+    assert.equal(inbound.cmd, 0xA1);
+    assert.equal(inbound.seq, 7);
+    assert.equal(inbound.payload.length, 13);
+    assert.equal(node.pendingInboundWait, null);
 });
 
 test('OTA no-updates acknowledgement resolves a matching pending command', () => {
