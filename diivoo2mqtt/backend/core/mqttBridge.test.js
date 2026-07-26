@@ -155,12 +155,12 @@ test('MQTT discovery uses a custom channel name without changing its identity', 
         },
     });
 
-    const switchConfig = published.find(
-        (entry) => entry.topic === 'homeassistant/switch/123_ch1/config'
+    const valveConfig = published.find(
+        (entry) => entry.topic === 'homeassistant/valve/123_ch1/config'
     );
-    assert.ok(switchConfig);
+    assert.ok(valveConfig);
 
-    const config = JSON.parse(switchConfig.payload);
+    const config = JSON.parse(valveConfig.payload);
     assert.equal(config.name, 'Tomatoes');
     assert.equal(config.unique_id, 'diivoo_123_valve_1');
     assert.equal(config.command_topic, 'diivoo/123/valve/1/set');
@@ -266,8 +266,8 @@ test('MQTT discovery retains the translated fallback for unnamed channels', () =
         },
     });
 
-    const switchConfig = published.find(
-        (entry) => entry.topic === 'homeassistant/switch/123_ch1/config'
+    const valveConfig = published.find(
+        (entry) => entry.topic === 'homeassistant/valve/123_ch1/config'
     );
-    assert.equal(JSON.parse(switchConfig.payload).name, 'Valve 1');
+    assert.equal(JSON.parse(valveConfig.payload).name, 'Valve 1');
 });
