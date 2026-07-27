@@ -149,7 +149,7 @@
               type="button"
               :disabled="!gw.isConnected"
               class="inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
-              :class="gw.ledState === 'ON' ? 'theme-chip-success' : 'theme-chip-neutral'"
+              :class="gw.ledState === 'ON' ? 'theme-chip-success' : 'theme-button-secondary'"
               @click="gatewaySetLed(gw.id, gw.ledState === 'ON' ? 'OFF' : 'ON')"
             >
               LED: {{ gw.ledState === 'ON' ? 'On' : 'Off' }}
