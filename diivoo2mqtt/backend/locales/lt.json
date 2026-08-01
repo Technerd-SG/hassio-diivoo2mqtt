@@ -12,5 +12,6 @@
   "firmware_update": "Programinės aparatinės įrangos naujinimas",
   "valve_rain_delay": "Vožtuvas {ch} Lietaus atidėjimas",
   "valve_rain_delay_until": "Vožtuvas {ch} Lietaus atidėjimas iki",
-  "valve_schedules": "Vožtuvas {ch} Tvarkaraščiai"
+  "valve_schedules": "Vožtuvas {ch} Tvarkaraščiai",
+  "valve_next_watering": "Vožtuvas {ch} Kitas laistymas"
 }

@@ -1350,6 +1350,56 @@ class ValveDevice extends EventEmitter {
         return described;
     }
 
+    _scheduleMatchesDate(schedule, date) {
+        const repeat = schedule.repeat || 'custom';
+        const weekdays = Array.isArray(schedule.weekdays) ? schedule.weekdays : [];
+        const isoWeekday = date.getDay() === 0 ? 7 : date.getDay();
+
+        switch (repeat) {
+            case 'daily':
+                return true;
+            case 'even':
+                return date.getDate() % 2 === 0;
+            case 'odd':
+                return date.getDate() % 2 === 1;
+            case 'custom':
+                return weekdays.includes(isoWeekday);
+            default:
+                return weekdays.length > 0 && weekdays.includes(isoWeekday);
+        }
+    }
+
+    _nextScheduleOccurrence(schedule, from) {
+        const [hourStr = '0', minuteStr = '0'] = String(schedule.startTime || '00:00').split(':');
+        const hour = Number.parseInt(hourStr, 10) || 0;
+        const minute = Number.parseInt(minuteStr, 10) || 0;
+
+        for (let offset = 0; offset < 32; offset++) {
+            const candidate = new Date(from);
+            candidate.setDate(candidate.getDate() + offset);
+            candidate.setHours(hour, minute, 0, 0);
+
+            if (candidate > from && this._scheduleMatchesDate(schedule, candidate)) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    _computeNextWatering(schedules, from) {
+        let earliest = null;
+
+        for (const schedule of schedules || []) {
+            const candidate = this._nextScheduleOccurrence(schedule, from);
+            if (candidate && (!earliest || candidate < earliest)) {
+                earliest = candidate;
+            }
+        }
+
+        return earliest ? earliest.toISOString() : null;
+    }
+
     getLiveState() {
         const now = Date.now();
         const liveChannels = {};
@@ -1392,7 +1442,8 @@ class ValveDevice extends EventEmitter {
                 lastSync: ch.lastSyncTime ? new Date(ch.lastSyncTime).toISOString() : null,
                 rainDelayHours,
                 rainDelayUntil,
-                schedules: (ch.schedules || []).map((schedule) => this._describeSchedule(schedule))
+                schedules: (ch.schedules || []).map((schedule) => this._describeSchedule(schedule)),
+                nextWatering: this._computeNextWatering(ch.schedules, new Date(now))
             };
         }
 

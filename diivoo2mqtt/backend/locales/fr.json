@@ -12,5 +12,6 @@
   "firmware_update": "Mise à jour du firmware",
   "valve_rain_delay": "Vanne {ch} Retard pluie",
   "valve_rain_delay_until": "Vanne {ch} Retard pluie jusqu'au",
-  "valve_schedules": "Vanne {ch} Programmes"
+  "valve_schedules": "Vanne {ch} Programmes",
+  "valve_next_watering": "Vanne {ch} Prochain arrosage"
 }

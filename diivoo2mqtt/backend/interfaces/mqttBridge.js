@@ -351,6 +351,20 @@ class MqttBridge {
                     device: deviceBase
                 })
             );
+
+            // Next Watering (computed from schedules, as a native HA timestamp)
+            this._publish(
+                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_next_watering/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_next_watering', { ch }),
+                    unique_id: `diivoo_${valveId}_next_watering_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].nextWatering or '' }}`,
+                    device_class: 'timestamp',
+                    icon: 'mdi:calendar-arrow-right',
+                    device: deviceBase
+                })
+            );
         }
     }
 

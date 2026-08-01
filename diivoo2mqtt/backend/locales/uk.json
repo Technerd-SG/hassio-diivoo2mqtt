@@ -12,5 +12,6 @@
   "firmware_update": "Оновлення прошивки",
   "valve_rain_delay": "Клапан {ch} Затримка дощу",
   "valve_rain_delay_until": "Клапан {ch} Затримка дощу до",
-  "valve_schedules": "Клапан {ch} Розклади"
+  "valve_schedules": "Клапан {ch} Розклади",
+  "valve_next_watering": "Клапан {ch} Наступний полив"
 }

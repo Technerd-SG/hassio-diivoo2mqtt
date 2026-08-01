@@ -12,5 +12,6 @@
   "firmware_update": "Cập nhật firmware",
   "valve_rain_delay": "Van {ch} Trì hoãn mưa",
   "valve_rain_delay_until": "Van {ch} Trì hoãn mưa đến",
-  "valve_schedules": "Van {ch} Lịch trình"
+  "valve_schedules": "Van {ch} Lịch trình",
+  "valve_next_watering": "Van {ch} Lần tưới tiếp theo"
 }

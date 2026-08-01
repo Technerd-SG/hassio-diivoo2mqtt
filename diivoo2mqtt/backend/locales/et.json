@@ -12,5 +12,6 @@
   "firmware_update": "Püsivara uuendus",
   "valve_rain_delay": "Ventiil {ch} Vihmaviivitus",
   "valve_rain_delay_until": "Ventiil {ch} Vihmaviivitus kuni",
-  "valve_schedules": "Ventiil {ch} Ajakavad"
+  "valve_schedules": "Ventiil {ch} Ajakavad",
+  "valve_next_watering": "Ventiil {ch} Järgmine kastmine"
 }

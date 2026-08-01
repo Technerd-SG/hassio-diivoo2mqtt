@@ -12,5 +12,6 @@
   "firmware_update": "Kemas kini firmware",
   "valve_rain_delay": "Injap {ch} Kelewatan Hujan",
   "valve_rain_delay_until": "Injap {ch} Kelewatan Hujan Sehingga",
-  "valve_schedules": "Injap {ch} Jadual"
+  "valve_schedules": "Injap {ch} Jadual",
+  "valve_next_watering": "Injap {ch} Penyiraman Seterusnya"
 }

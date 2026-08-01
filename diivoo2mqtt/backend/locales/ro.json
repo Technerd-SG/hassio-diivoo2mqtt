@@ -12,5 +12,6 @@
   "firmware_update": "Actualizare firmware",
   "valve_rain_delay": "Supapă {ch} Întârziere ploaie",
   "valve_rain_delay_until": "Supapă {ch} Întârziere ploaie până la",
-  "valve_schedules": "Supapă {ch} Programări"
+  "valve_schedules": "Supapă {ch} Programări",
+  "valve_next_watering": "Supapă {ch} Următoarea udare"
 }

@@ -12,5 +12,6 @@
   "firmware_update": "Актуализация на фърмуера",
   "valve_rain_delay": "Клапан {ch} Дъждовно забавяне",
   "valve_rain_delay_until": "Клапан {ch} Дъждовно забавяне до",
-  "valve_schedules": "Вентил {ch} Графици"
+  "valve_schedules": "Вентил {ch} Графици",
+  "valve_next_watering": "Вентил {ch} Следващо поливане"
 }

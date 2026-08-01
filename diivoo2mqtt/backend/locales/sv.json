@@ -12,5 +12,6 @@
   "firmware_update": "Firmwareuppdatering",
   "valve_rain_delay": "Ventil {ch} Regnfördröjning",
   "valve_rain_delay_until": "Ventil {ch} Regnfördröjning till",
-  "valve_schedules": "Ventil {ch} Scheman"
+  "valve_schedules": "Ventil {ch} Scheman",
+  "valve_next_watering": "Ventil {ch} Nästa bevattning"
 }

@@ -12,5 +12,6 @@
   "firmware_update": "Firmware-frissítés",
   "valve_rain_delay": "Szelep {ch} Esőkésleltetés",
   "valve_rain_delay_until": "Szelep {ch} Esőkésleltetés eddig",
-  "valve_schedules": "{ch}. szelep ütemezései"
+  "valve_schedules": "{ch}. szelep ütemezései",
+  "valve_next_watering": "{ch}. szelep következő öntözés"
 }

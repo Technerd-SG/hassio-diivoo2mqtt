@@ -85,6 +85,67 @@ test('schedules are exposed in live state with human-readable day/repeat info', 
     });
 });
 
+test('nextWatering is null in live state when a channel has no schedules', () => {
+    const device = createDevice();
+
+    assert.equal(device.getLiveState().channels[1].nextWatering, null);
+});
+
+test('_computeNextWatering rolls over to the next day once today\'s start time has passed', () => {
+    const device = createDevice();
+    const from = new Date(2026, 0, 1, 10, 0, 0);
+    const schedules = [{ id: 'p1', startTime: '06:00', repeat: 'daily', weekdays: [] }];
+
+    const next = device._computeNextWatering(schedules, from);
+
+    assert.equal(next, new Date(2026, 0, 2, 6, 0, 0).toISOString());
+});
+
+test('_computeNextWatering keeps today\'s occurrence when the start time has not passed yet', () => {
+    const device = createDevice();
+    const from = new Date(2026, 0, 1, 3, 0, 0);
+    const schedules = [{ id: 'p1', startTime: '06:00', repeat: 'daily', weekdays: [] }];
+
+    const next = device._computeNextWatering(schedules, from);
+
+    assert.equal(next, new Date(2026, 0, 1, 6, 0, 0).toISOString());
+});
+
+test('_computeNextWatering respects custom weekday schedules', () => {
+    const device = createDevice();
+    // 2026-01-01 is a Thursday; weekdays use 1=Mon..7=Sun, so the next
+    // Mon/Wed/Fri occurrence is Friday 2026-01-02.
+    const from = new Date(2026, 0, 1, 12, 0, 0);
+    const schedules = [{ id: 'p1', startTime: '07:00', repeat: 'custom', weekdays: [1, 3, 5] }];
+
+    const next = device._computeNextWatering(schedules, from);
+
+    assert.equal(next, new Date(2026, 0, 2, 7, 0, 0).toISOString());
+});
+
+test('_computeNextWatering picks the earliest occurrence across multiple schedules', () => {
+    const device = createDevice();
+    const from = new Date(2026, 0, 1, 12, 0, 0);
+    const schedules = [
+        { id: 'p1', startTime: '18:00', repeat: 'daily', weekdays: [] },
+        { id: 'p2', startTime: '06:00', repeat: 'daily', weekdays: [] },
+    ];
+
+    const next = device._computeNextWatering(schedules, from);
+
+    assert.equal(next, new Date(2026, 0, 1, 18, 0, 0).toISOString());
+});
+
+test('nextWatering in live state is a valid ISO timestamp when schedules exist', () => {
+    const device = createDevice();
+    device.channels[1].schedules = [{ id: 'p1', startTime: '06:00', repeat: 'daily', weekdays: [] }];
+
+    const nextWatering = device.getLiveState().channels[1].nextWatering;
+
+    assert.equal(typeof nextWatering, 'string');
+    assert.ok(!Number.isNaN(new Date(nextWatering).getTime()));
+});
+
 test('marks a device unreachable after command failure and restores it on the next packet', () => {
     const device = createDevice();
     const updates = [];

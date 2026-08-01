@@ -12,5 +12,6 @@
   "firmware_update": "تحديث البرنامج الثابت",
   "valve_rain_delay": "صمام {ch} تأخير المطر",
   "valve_rain_delay_until": "صمام {ch} تأخير المطر حتى",
-  "valve_schedules": "صمام {ch} الجداول الزمنية"
+  "valve_schedules": "صمام {ch} الجداول الزمنية",
+  "valve_next_watering": "صمام {ch} الري القادم"
 }
