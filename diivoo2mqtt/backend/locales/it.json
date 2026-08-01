@@ -11,5 +11,6 @@
   "gateway_refresh_version": "Gateway Aggiorna versione",
   "firmware_update": "Aggiornamento firmware",
   "valve_rain_delay": "Valvola {ch} Ritardo pioggia",
-  "valve_rain_delay_until": "Valvola {ch} Ritardo pioggia fino a"
+  "valve_rain_delay_until": "Valvola {ch} Ritardo pioggia fino a",
+  "valve_schedules": "Valvola {ch} Programmazioni"
 }

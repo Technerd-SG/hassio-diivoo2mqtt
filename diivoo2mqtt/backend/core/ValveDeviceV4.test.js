@@ -20,6 +20,71 @@ test('channel display names are exposed in live state', () => {
     assert.equal(device.getLiveState().channels[1].displayName, 'Tomatoes');
 });
 
+test('new channels expose an empty schedules list in live state', () => {
+    const device = createDevice();
+
+    assert.deepEqual(device.getLiveState().channels[1].schedules, []);
+});
+
+test('schedules are exposed in live state with human-readable day/repeat info', () => {
+    const device = createDevice();
+    device.channels[1].schedules = [
+        { id: 'plan-1', mode: 'normal', startTime: '06:00', durationMinutes: 15, repeat: 'daily', weekdays: [] },
+        {
+            id: 'plan-2',
+            mode: 'custom-should-normalize',
+            startTime: '18:30',
+            durationMinutes: 5,
+            repeat: 'custom',
+            weekdays: [1, 3, 5],
+        },
+        {
+            id: 'plan-3',
+            mode: 'mist',
+            startTime: '07:00',
+            durationMinutes: 20,
+            repeat: 'odd',
+            weekdays: [],
+            mistOnSeconds: 10,
+            mistOffSeconds: 30,
+        },
+    ];
+
+    const schedules = device.getLiveState().channels[1].schedules;
+
+    assert.deepEqual(schedules[0], {
+        id: 'plan-1',
+        mode: 'normal',
+        startTime: '06:00',
+        durationMinutes: 15,
+        repeat: 'daily',
+        weekdays: [],
+        days: 'Every day',
+    });
+
+    assert.deepEqual(schedules[1], {
+        id: 'plan-2',
+        mode: 'normal',
+        startTime: '18:30',
+        durationMinutes: 5,
+        repeat: 'custom',
+        weekdays: [1, 3, 5],
+        days: 'Mon, Wed, Fri',
+    });
+
+    assert.deepEqual(schedules[2], {
+        id: 'plan-3',
+        mode: 'mist',
+        startTime: '07:00',
+        durationMinutes: 20,
+        repeat: 'odd',
+        weekdays: [],
+        days: 'Odd dates',
+        mistOnSeconds: 10,
+        mistOffSeconds: 30,
+    });
+});
+
 test('marks a device unreachable after command failure and restores it on the next packet', () => {
     const device = createDevice();
     const updates = [];

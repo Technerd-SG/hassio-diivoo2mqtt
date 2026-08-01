@@ -11,5 +11,6 @@
   "gateway_refresh_version": "Gateway Päivitä versio",
   "firmware_update": "Laiteohjelmistopäivitys",
   "valve_rain_delay": "Venttiili {ch} Sadeviive",
-  "valve_rain_delay_until": "Venttiili {ch} Sadeviive asti"
+  "valve_rain_delay_until": "Venttiili {ch} Sadeviive asti",
+  "valve_schedules": "Venttiili {ch} Aikataulut"
 }

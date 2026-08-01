@@ -11,5 +11,6 @@
   "gateway_refresh_version": "Gateway Sürümü yenile",
   "firmware_update": "Donanım yazılımı güncellemesi",
   "valve_rain_delay": "Vana {ch} Yağmur Gecikmesi",
-  "valve_rain_delay_until": "Vana {ch} Yağmur Gecikmesi Bitiş"
+  "valve_rain_delay_until": "Vana {ch} Yağmur Gecikmesi Bitiş",
+  "valve_schedules": "Valf {ch} Zamanlamalar"
 }

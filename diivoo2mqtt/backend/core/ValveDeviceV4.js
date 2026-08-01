@@ -1314,6 +1314,42 @@ class ValveDevice extends EventEmitter {
         return 0;
     }
 
+    _describeScheduleDays(schedule) {
+        switch (schedule.repeat) {
+            case 'daily':
+                return 'Every day';
+            case 'odd':
+                return 'Odd dates';
+            case 'even':
+                return 'Even dates';
+            case 'custom': {
+                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                return (schedule.weekdays || []).map((day) => dayNames[day - 1] || '?').join(', ');
+            }
+            default:
+                return 'Every day';
+        }
+    }
+
+    _describeSchedule(schedule) {
+        const described = {
+            id: schedule.id,
+            mode: schedule.mode === 'mist' ? 'mist' : 'normal',
+            startTime: schedule.startTime,
+            durationMinutes: schedule.durationMinutes,
+            repeat: schedule.repeat,
+            weekdays: schedule.weekdays || [],
+            days: this._describeScheduleDays(schedule),
+        };
+
+        if (described.mode === 'mist') {
+            described.mistOnSeconds = schedule.mistOnSeconds;
+            described.mistOffSeconds = schedule.mistOffSeconds;
+        }
+
+        return described;
+    }
+
     getLiveState() {
         const now = Date.now();
         const liveChannels = {};
@@ -1355,7 +1391,8 @@ class ValveDevice extends EventEmitter {
                 source: ch.sourceText,
                 lastSync: ch.lastSyncTime ? new Date(ch.lastSyncTime).toISOString() : null,
                 rainDelayHours,
-                rainDelayUntil
+                rainDelayUntil,
+                schedules: (ch.schedules || []).map((schedule) => this._describeSchedule(schedule))
             };
         }
 
