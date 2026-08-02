@@ -1,6 +1,6 @@
 <template>
   <main class="app-shell px-3 py-3 font-sans antialiased sm:px-4">
-    <div class="mx-auto grid max-w-[1080px] gap-3.5">
+    <div class="mx-auto grid max-w-[1600px] gap-3.5">
       <section class="theme-panel grid gap-3.5 rounded-[28px] border p-4 backdrop-blur-[10px]">
         <div class="flex flex-wrap items-start justify-between gap-3.5 max-md:flex-col max-md:items-stretch">
           <div>
@@ -149,7 +149,7 @@
               type="button"
               :disabled="!gw.isConnected"
               class="inline-flex items-center rounded-full border px-3 py-2 text-[13px] font-bold transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
-              :class="gw.ledState === 'ON' ? 'theme-chip-success' : 'theme-chip-neutral'"
+              :class="gw.ledState === 'ON' ? 'theme-chip-success' : 'theme-button-secondary'"
               @click="gatewaySetLed(gw.id, gw.ledState === 'ON' ? 'OFF' : 'ON')"
             >
               LED: {{ gw.ledState === 'ON' ? 'On' : 'Off' }}
@@ -328,7 +328,11 @@
             </div>
           </div>
 
-          <div v-if="!isDeviceCollapsed(device.valveId)" class="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] max-md:grid-cols-1">
+          <div
+            v-if="!isDeviceCollapsed(device.valveId)"
+            class="grid gap-3 [grid-template-columns:repeat(var(--channel-count),minmax(0,1fr))] max-md:grid-cols-1"
+            :style="{ '--channel-count': channelCount(device) }"
+          >
             <section
               v-for="[channelId, channel] in sortedChannels(device)"
               :key="`${device.valveId}-${channelId}`"
