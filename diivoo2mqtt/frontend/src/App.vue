@@ -1,19 +1,19 @@
 <template>
   <main class="app-shell px-3 py-3 font-sans antialiased sm:px-4">
     <div class="mx-auto grid max-w-[1080px] gap-3.5">
-      <section class="theme-panel grid gap-3.5 rounded-[28px] border p-4 backdrop-blur-[10px]">
+      <section class="theme-panel grid gap-3.5 rounded-[28px] border p-4 backdrop-blur-[10px] max-md:gap-2.5 max-md:rounded-[20px] max-md:p-3">
         <div class="flex flex-wrap items-start justify-between gap-3.5 max-md:flex-col max-md:items-stretch">
           <div>
-            <h1 class="m-0 text-[clamp(28px,4vw,40px)] font-extrabold leading-none tracking-[-0.04em]">
+            <h1 class="m-0 text-[clamp(28px,4vw,40px)] font-extrabold leading-none tracking-[-0.04em] max-md:text-2xl">
               Irrigation
             </h1>
-            <p class="theme-text-muted mt-2 max-w-2xl text-[15px] leading-[1.45]">
+            <p class="theme-text-muted mt-2 max-w-2xl text-[15px] leading-[1.45] max-md:mt-1 max-md:text-[13px]">
               Start, stop, and manage irrigation schedules for each valve.
             </p>
           </div>
 
-          <div class="flex flex-wrap items-center justify-end gap-2.5 max-md:w-full">
-            <div class="theme-button-secondary inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold max-md:w-full">
+          <div class="flex flex-wrap items-center justify-end gap-2.5 max-md:grid max-md:w-full max-md:grid-cols-2 max-md:gap-2">
+            <div class="theme-button-secondary inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold max-md:min-h-[40px] max-md:px-2.5 max-md:text-[13px]">
               <span
                 class="h-2.5 w-2.5 rounded-full"
                 :class="socketConnected ? 'bg-[#2f7d4b]' : 'bg-[#b64b4b]'"
@@ -23,7 +23,7 @@
 
             <button
               type="button"
-              class="theme-button-secondary inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] max-md:w-full"
+              class="theme-button-secondary inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] max-md:min-h-[40px] max-md:px-2.5 max-md:text-[13px]"
               @click="openRawEditor"
             >
               Edit Database
@@ -31,7 +31,7 @@
 
             <button
               type="button"
-              class="theme-button-secondary inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] max-md:w-full"
+              class="theme-button-secondary inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] max-md:min-h-[40px] max-md:px-2.5 max-md:text-[13px]"
               @click="addManualGateway"
             >
               + Gateway IP
@@ -39,7 +39,7 @@
 
             <button
               type="button"
-              class="inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-60 max-md:w-full"
+              class="inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-full border px-3.5 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-60 max-md:min-h-[40px] max-md:px-2.5 max-md:text-[13px]"
               :class="pairingButtonClass"
               :disabled="pairingBusy"
               @click="togglePairing"
@@ -49,18 +49,18 @@
           </div>
         </div>
 
-        <div class="theme-text-muted -mt-1 text-[13px] leading-[1.4]">
+        <div class="theme-text-muted -mt-1 text-[13px] leading-[1.4] max-md:text-[12px]">
           {{ pairingNote }}
         </div>
 
-        <div class="grid gap-2.5 md:grid-cols-3">
+        <div class="grid grid-cols-3 gap-2.5 max-md:gap-2">
           <div
             v-for="item in summaryCards"
             :key="item.label"
-            class="theme-soft rounded-[22px] border px-4 py-3.5"
+            class="theme-soft rounded-[22px] border px-4 py-3.5 max-md:rounded-2xl max-md:px-2.5 max-md:py-2.5"
           >
-            <span class="theme-text-muted mb-2 block text-[13px]">{{ item.label }}</span>
-            <strong class="block text-[28px] leading-none tracking-[-0.04em]">{{ item.value }}</strong>
+            <span class="theme-text-muted mb-2 block text-[13px] max-md:mb-1 max-md:text-[11px]">{{ item.label }}</span>
+            <strong class="block text-[28px] leading-none tracking-[-0.04em] max-md:text-[20px]">{{ item.value }}</strong>
           </div>
         </div>
       </section>
@@ -332,17 +332,18 @@
             <section
               v-for="[channelId, channel] in sortedChannels(device)"
               :key="`${device.valveId}-${channelId}`"
-              class="theme-subtle grid min-w-0 gap-3.5 rounded-[22px] border p-[15px]"
+              class="theme-subtle grid min-w-0 gap-3 rounded-[22px] border p-[15px] max-md:gap-2.5 max-md:p-3"
             >
               <div class="flex items-start justify-between gap-3 max-md:flex-col max-md:items-stretch">
-                <div class="min-w-0">
+                <button type="button" class="min-w-0 text-left" @click="toggleChannelCollapsed(device.valveId, channelId)">
                   <strong class="block text-lg leading-[1.1] tracking-[-0.02em]">{{ channelDisplayName(channel, channelId) }}</strong>
                   <span class="theme-text-muted mt-1 block text-[13px] leading-[1.4]">
                     {{ channel.source || 'Manual' }}
+                    <span class="ml-2">{{ isChannelCollapsed(device.valveId, channelId) ? '▼ expand' : '▲ collapse' }}</span>
                   </span>
-                </div>
+                </button>
 
-                <div class="grid grid-cols-2 gap-2 max-md:w-full">
+                <div v-if="!isChannelCollapsed(device.valveId, channelId)" class="grid grid-cols-2 gap-2 max-md:w-full">
                   <button
                     type="button"
                     class="theme-button-secondary min-h-[42px] rounded-full border px-3 text-[13px] font-bold transition hover:-translate-y-[1px]"
@@ -370,79 +371,84 @@
                 <div class="theme-text-muted text-xs leading-[1.4]">
                   {{ scheduleCount(device.valveId, channelId) }} schedule{{ scheduleCount(device.valveId, channelId) === 1 ? '' : 's' }}
                   · Rain stop: {{ rainStopText(device.valveId, channelId) }}
+                  <template v-if="isChannelCollapsed(device.valveId, channelId) && isChannelRunning(channel)">
+                    · {{ formatDuration(getLiveRemaining(channel)) }} left
+                  </template>
                 </div>
               </div>
 
-              <div class="grid gap-1">
-                <div class="[overflow-wrap:anywhere] text-[34px] font-extrabold leading-none tracking-[-0.05em] max-md:text-[30px]">
-                  {{ formatDuration(getLiveRemaining(channel)) }}
+              <template v-if="!isChannelCollapsed(device.valveId, channelId)">
+                <div class="grid gap-1">
+                  <div class="[overflow-wrap:anywhere] text-[34px] font-extrabold leading-none tracking-[-0.05em] max-md:text-[26px]">
+                    {{ formatDuration(getLiveRemaining(channel)) }}
+                  </div>
+                  <div class="theme-text-muted text-[13px]">remaining time</div>
                 </div>
-                <div class="theme-text-muted text-[13px]">remaining time</div>
-              </div>
 
-              <div class="grid gap-2 md:grid-cols-2 max-md:grid-cols-1">
-                <div class="theme-soft rounded-2xl border px-3 py-2.5">
-                  <span class="theme-text-muted mb-1 block text-xs">Default runtime</span>
-                  <strong class="block text-sm leading-[1.3]">
-                    {{ formatMinutes(getDefaultChannelConfig(device.valveId, channelId).defaultOpenMinutes) }}
-                  </strong>
+                <div class="grid gap-2 md:grid-cols-2 max-md:grid-cols-1">
+                  <div class="theme-soft rounded-2xl border px-3 py-2.5 max-md:px-2.5 max-md:py-2">
+                    <span class="theme-text-muted mb-1 block text-xs">Default runtime</span>
+                    <strong class="block text-sm leading-[1.3]">
+                      {{ formatMinutes(getDefaultChannelConfig(device.valveId, channelId).defaultOpenMinutes) }}
+                    </strong>
+                  </div>
+                  <div class="theme-soft rounded-2xl border px-3 py-2.5 max-md:px-2.5 max-md:py-2">
+                    <span class="theme-text-muted mb-1 block text-xs">Next schedule</span>
+                    <strong class="block text-sm leading-[1.3]">
+                      {{ nextPlanLabel(device.valveId, channelId) }}
+                    </strong>
+                  </div>
                 </div>
-                <div class="theme-soft rounded-2xl border px-3 py-2.5">
-                  <span class="theme-text-muted mb-1 block text-xs">Next schedule</span>
-                  <strong class="block text-sm leading-[1.3]">
-                    {{ nextPlanLabel(device.valveId, channelId) }}
-                  </strong>
+
+                <div class="grid grid-cols-4 gap-2 max-[860px]:grid-cols-2">
+                  <button
+                    v-for="minutes in PRESETS"
+                    :key="minutes"
+                    type="button"
+                    class="min-h-[46px] rounded-full border px-2.5 text-[13px] font-bold transition max-md:min-h-[40px]"
+                    :class="getInputMinutes(device.valveId, channelId) === minutes
+                      ? 'theme-chip-success'
+                      : 'theme-button-secondary'"
+                    @click="setPreset(device.valveId, channelId, minutes)"
+                  >
+                    {{ minutes }} min
+                  </button>
                 </div>
-              </div>
 
-              <div class="grid grid-cols-4 gap-2 max-[860px]:grid-cols-2">
-                <button
-                  v-for="minutes in PRESETS"
-                  :key="minutes"
-                  type="button"
-                  class="min-h-[46px] rounded-full border px-2.5 text-[13px] font-bold transition"
-                  :class="getInputMinutes(device.valveId, channelId) === minutes
-                    ? 'theme-chip-success'
-                    : 'theme-button-secondary'"
-                  @click="setPreset(device.valveId, channelId, minutes)"
-                >
-                  {{ minutes }} min
-                </button>
-              </div>
+                <div class="grid items-center gap-2.5 [grid-template-columns:minmax(0,112px)_minmax(0,1fr)_minmax(0,1fr)] max-[860px]:grid-cols-1">
+                  <label class="theme-input flex min-h-[46px] min-w-0 items-center gap-2 rounded-full border px-3.5 max-md:min-h-[42px]">
+                    <input
+                      :value="getInputMinutes(device.valveId, channelId)"
+                      type="number"
+                      inputmode="numeric"
+                      min="1"
+                      step="1"
+                      class="w-full min-w-0 appearance-none border-0 bg-transparent p-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      :aria-label="`Duration in minutes for valve ${channelId}`"
+                      @input="setDurationInput(device.valveId, channelId, $event)"
+                    />
+                    <span class="theme-text-muted shrink-0 whitespace-nowrap text-[13px]">min</span>
+                  </label>
 
-              <div class="grid items-center gap-2.5 [grid-template-columns:minmax(0,112px)_minmax(0,1fr)_minmax(0,1fr)] max-[860px]:grid-cols-1">
-                <label class="theme-input flex min-h-[46px] min-w-0 items-center gap-2 rounded-full border px-3.5">
-                  <input
-                    :value="getInputMinutes(device.valveId, channelId)"
-                    type="number"
-                    inputmode="numeric"
-                    min="1"
-                    step="1"
-                    class="w-full min-w-0 appearance-none border-0 bg-transparent p-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    :aria-label="`Duration in minutes for valve ${channelId}`"
-                    @input="setDurationInput(device.valveId, channelId, $event)"
-                  />
-                  <span class="theme-text-muted shrink-0 whitespace-nowrap text-[13px]">min</span>
-                </label>
+                  <button
+                    type="button"
+                    class="theme-button-primary min-h-[46px] w-full rounded-full border px-3 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-60 max-md:min-h-[42px]"
+                    :disabled="isPending(device.valveId, channelId, 'ON')"
+                    @click="sendValve(device.valveId, channelId, 'ON')"
+                  >
+                    {{ isPending(device.valveId, channelId, 'ON') ? 'Starting…' : 'Start' }}
+                  </button>
 
-                <button
-                  type="button"
-                  class="theme-button-primary min-h-[46px] w-full rounded-full border px-3 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-60"
-                  :disabled="isPending(device.valveId, channelId, 'ON')"
-                  @click="sendValve(device.valveId, channelId, 'ON')"
-                >
-                  {{ isPending(device.valveId, channelId, 'ON') ? 'Starting…' : 'Start' }}
-                </button>
-
-                <button
-                  type="button"
-                  class="theme-button-danger min-h-[46px] w-full rounded-full border px-3 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-60"
-                  :disabled="isPending(device.valveId, channelId, 'OFF')"
-                  @click="sendValve(device.valveId, channelId, 'OFF')"
-                >
-                  {{ isPending(device.valveId, channelId, 'OFF') ? 'Stopping…' : 'Stop' }}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    class="theme-button-danger min-h-[46px] w-full rounded-full border px-3 py-2.5 text-sm font-bold transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-60 max-md:min-h-[42px]"
+                    :disabled="isPending(device.valveId, channelId, 'OFF')"
+                    @click="sendValve(device.valveId, channelId, 'OFF')"
+                  >
+                    {{ isPending(device.valveId, channelId, 'OFF') ? 'Stopping…' : 'Stop' }}
+                  </button>
+                </div>
+              </template>
             </section>
           </div>
         </article>
@@ -810,8 +816,13 @@ let heartbeatIntervalId = null
 let reconnectTimerId = null
 let heartbeatFallbackTimerId = null
 let themeMediaQuery = null
+let mobileMediaQuery = null
 let heartbeatInFlight = false
 let missedHeartbeats = 0
+
+const seenDeviceIds = new Set()
+const seenGatewayIds = new Set()
+const seenChannelKeys = new Set()
 
 const PRESETS = [5, 10, 30, 60]
 const sheetTitleId = 'sheetTitle'
@@ -847,6 +858,8 @@ const isRestarting = ref(false)
 
 const collapsedDevices = ref(new Set())
 const collapsedGateways = ref(new Set())
+const collapsedChannels = ref(new Set())
+const isMobile = ref(false)
 const renamingDeviceId = ref(null)
 const renameInput = ref('')
 const renamingGatewayId = ref(null)
@@ -963,6 +976,12 @@ function syncTheme(event) {
     : window.matchMedia('(prefers-color-scheme: dark)').matches
 
   document.documentElement.classList.toggle('dark', dark)
+}
+
+function syncMobile(event) {
+  isMobile.value = typeof event?.matches === 'boolean'
+    ? event.matches
+    : window.matchMedia('(max-width: 767px)').matches
 }
 
 function channelKey(deviceId, channelId) {
@@ -1151,8 +1170,19 @@ function mergeDeviceUpdate(device, targetObject = null) {
   const previous = currentStore[device.valveId] || null
   const nextChannels = {}
 
+  if (isMobile.value && !seenDeviceIds.has(device.valveId)) {
+    collapsedDevices.value = new Set(collapsedDevices.value).add(device.valveId)
+  }
+  seenDeviceIds.add(device.valveId)
+
   for (const [channelId, channel] of Object.entries(device.channels || {})) {
     const prev = previous?.channels?.[channelId]
+    const key = channelKey(device.valveId, channelId)
+
+    if (isMobile.value && !seenChannelKeys.has(key)) {
+      collapsedChannels.value = new Set(collapsedChannels.value).add(key)
+    }
+    seenChannelKeys.add(key)
 
     const syncChanged =
       !prev ||
@@ -1411,6 +1441,21 @@ function toggleDeviceCollapsed(valveId) {
     next.add(valveId)
   }
   collapsedDevices.value = next
+}
+
+function isChannelCollapsed(deviceId, channelId) {
+  return collapsedChannels.value.has(channelKey(deviceId, channelId))
+}
+
+function toggleChannelCollapsed(deviceId, channelId) {
+  const key = channelKey(deviceId, channelId)
+  const next = new Set(collapsedChannels.value)
+  if (next.has(key)) {
+    next.delete(key)
+  } else {
+    next.add(key)
+  }
+  collapsedChannels.value = next
 }
 
 function togglePairing() {
@@ -1841,6 +1886,25 @@ function handleDeviceUpdate(device) {
   mergeDeviceUpdate(device)
 }
 
+function handleGatewaysState(gws) {
+  const incoming = Array.isArray(gws) ? gws : []
+
+  if (isMobile.value) {
+    const next = new Set(collapsedGateways.value)
+    let changed = false
+    for (const gw of incoming) {
+      if (!seenGatewayIds.has(gw.id)) {
+        next.add(gw.id)
+        changed = true
+      }
+    }
+    if (changed) collapsedGateways.value = next
+  }
+  for (const gw of incoming) seenGatewayIds.add(gw.id)
+
+  gateways.value = incoming
+}
+
 function handlePairingState({ enabled }) {
   pairingBusy.value = false
   pairingMode.value = Boolean(enabled)
@@ -1896,6 +1960,15 @@ onMounted(async () => {
     themeMediaQuery.addListener(syncTheme)
   }
 
+  mobileMediaQuery = window.matchMedia('(max-width: 767px)')
+  syncMobile(mobileMediaQuery)
+
+  if (mobileMediaQuery.addEventListener) {
+    mobileMediaQuery.addEventListener('change', syncMobile)
+  } else {
+    mobileMediaQuery.addListener(syncMobile)
+  }
+
   socket = await createSocket()
   socketConnected.value = socket.connected
 
@@ -1907,7 +1980,7 @@ onMounted(async () => {
   socket.on('pairingState', handlePairingState)
   socket.on('channelConfigState', handleChannelConfigState)
   socket.on('configSyncState', handleConfigSyncState)
-  socket.on('gatewaysState', (gws) => { gateways.value = Array.isArray(gws) ? gws : [] })
+  socket.on('gatewaysState', handleGatewaysState)
   socket.on('diagnosticLogs', handleDiagnosticLogs)
 
   intervalId = window.setInterval(() => {
@@ -1926,7 +1999,7 @@ onUnmounted(() => {
   socket?.off('pairingState', handlePairingState)
   socket?.off('channelConfigState', handleChannelConfigState)
   socket?.off('configSyncState', handleConfigSyncState)
-  socket?.off('gatewaysState')
+  socket?.off('gatewaysState', handleGatewaysState)
   socket?.off('diagnosticLogs', handleDiagnosticLogs)
 
   stopHeartbeat()
@@ -1945,6 +2018,14 @@ onUnmounted(() => {
       themeMediaQuery.removeEventListener('change', syncTheme)
     } else {
       themeMediaQuery.removeListener(syncTheme)
+    }
+  }
+
+  if (mobileMediaQuery) {
+    if (mobileMediaQuery.removeEventListener) {
+      mobileMediaQuery.removeEventListener('change', syncMobile)
+    } else {
+      mobileMediaQuery.removeListener(syncMobile)
     }
   }
 })
