@@ -334,6 +334,37 @@ class MqttBridge {
                     device: deviceBase
                 })
             );
+
+            // Schedules (count as state, full plan details as JSON attributes)
+            this._publish(
+                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_schedules/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_schedules', { ch }),
+                    unique_id: `diivoo_${valveId}_schedules_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].schedules | length }}`,
+                    unit_of_measurement: 'schedules',
+                    json_attributes_topic: stateTopic,
+                    json_attributes_template: `{{ {'schedules': value_json.channels['${ch}'].schedules} | tojson }}`,
+                    icon: 'mdi:calendar-clock-outline',
+                    entity_category: 'diagnostic',
+                    device: deviceBase
+                })
+            );
+
+            // Next Watering (computed from schedules, as a native HA timestamp)
+            this._publish(
+                `${discoveryPrefix}/sensor/${valveId}_ch${ch}_next_watering/config`,
+                JSON.stringify({
+                    name: t(this.strings, 'valve_next_watering', { ch }),
+                    unique_id: `diivoo_${valveId}_next_watering_${ch}`,
+                    state_topic: stateTopic,
+                    value_template: `{{ value_json.channels['${ch}'].nextWatering or '' }}`,
+                    device_class: 'timestamp',
+                    icon: 'mdi:calendar-arrow-right',
+                    device: deviceBase
+                })
+            );
         }
     }
 

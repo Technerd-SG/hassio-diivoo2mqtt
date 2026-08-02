@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Gateway Aktualizovat verzi",
   "firmware_update": "Aktualizace firmwaru",
   "valve_rain_delay": "Ventil {ch} Zpoždění deště",
-  "valve_rain_delay_until": "Ventil {ch} Zpoždění deště do"
+  "valve_rain_delay_until": "Ventil {ch} Zpoždění deště do",
+  "valve_schedules": "Ventil {ch} Plány",
+  "valve_next_watering": "Ventil {ch} Další zálivka"
 }

@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Шлюз Обновить версию",
   "firmware_update": "Обновление прошивки",
   "valve_rain_delay": "Клапан {ch} Задержка дождя",
-  "valve_rain_delay_until": "Клапан {ch} Задержка дождя до"
+  "valve_rain_delay_until": "Клапан {ch} Задержка дождя до",
+  "valve_schedules": "Клапан {ch} Расписания",
+  "valve_next_watering": "Клапан {ch} Следующий полив"
 }

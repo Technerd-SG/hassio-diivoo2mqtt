@@ -11,5 +11,7 @@
   "gateway_refresh_version": "שער רענן גרסה",
   "firmware_update": "עדכון קושחה",
   "valve_rain_delay": "שסתום {ch} עיכוב גשם",
-  "valve_rain_delay_until": "שסתום {ch} עיכוב גשם עד"
+  "valve_rain_delay_until": "שסתום {ch} עיכוב גשם עד",
+  "valve_schedules": "שסתום {ch} לוחות זמנים",
+  "valve_next_watering": "שסתום {ch} השקיה הבאה"
 }

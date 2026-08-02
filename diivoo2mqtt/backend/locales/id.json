@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Gateway Perbarui versi",
   "firmware_update": "Pembaruan firmware",
   "valve_rain_delay": "Katup {ch} Penundaan Hujan",
-  "valve_rain_delay_until": "Katup {ch} Penundaan Hujan Hingga"
+  "valve_rain_delay_until": "Katup {ch} Penundaan Hujan Hingga",
+  "valve_schedules": "Katup {ch} Jadwal",
+  "valve_next_watering": "Katup {ch} Penyiraman Berikutnya"
 }

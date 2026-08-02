@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Gateway Osvježi verziju",
   "firmware_update": "Ažuriranje firmwarea",
   "valve_rain_delay": "Ventil {ch} Kašnjenje kiše",
-  "valve_rain_delay_until": "Ventil {ch} Kašnjenje kiše do"
+  "valve_rain_delay_until": "Ventil {ch} Kašnjenje kiše do",
+  "valve_schedules": "Ventil {ch} Rasporedi",
+  "valve_next_watering": "Ventil {ch} Sljedeće zalijevanje"
 }

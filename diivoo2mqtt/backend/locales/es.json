@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Gateway Actualizar versión",
   "firmware_update": "Actualización de firmware",
   "valve_rain_delay": "Válvula {ch} Retraso por lluvia",
-  "valve_rain_delay_until": "Válvula {ch} Retraso por lluvia hasta"
+  "valve_rain_delay_until": "Válvula {ch} Retraso por lluvia hasta",
+  "valve_schedules": "Válvula {ch} Programaciones",
+  "valve_next_watering": "Válvula {ch} Próximo riego"
 }

@@ -11,5 +11,7 @@
   "gateway_refresh_version": "게이트웨이 버전 새로고침",
   "firmware_update": "펌웨어 업데이트",
   "valve_rain_delay": "밸브 {ch} 우천 지연",
-  "valve_rain_delay_until": "밸브 {ch} 우천 지연 종료"
+  "valve_rain_delay_until": "밸브 {ch} 우천 지연 종료",
+  "valve_schedules": "밸브 {ch} 일정",
+  "valve_next_watering": "밸브 {ch} 다음 급수"
 }

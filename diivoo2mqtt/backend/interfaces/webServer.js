@@ -411,6 +411,7 @@ class WebServer {
 
                     channel.schedules = normalizedSchedules;
                     this.hub.deviceStore.save(this.hub.devices);
+                    device._notifyStateChange('schedules-save');
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'schedules-save');
 
@@ -464,6 +465,7 @@ class WebServer {
                         channel.schedules.push(normalizedSchedule);
                     }
                     this.hub.deviceStore.save(this.hub.devices);
+                    device._notifyStateChange('schedule-save');
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'schedule-save');
 
@@ -508,6 +510,7 @@ class WebServer {
                     channel.schedules = (channel.schedules || []).filter((item) => item.id !== scheduleId);
                     const after = channel.schedules.length;
                     this.hub.deviceStore.save(this.hub.devices);
+                    device._notifyStateChange('schedule-delete');
 
                     await this._triggerDeviceRefresh(device, Number(channelId), 'schedule-delete');
 

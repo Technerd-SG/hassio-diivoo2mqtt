@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Gateway Ανανέωση έκδοσης",
   "firmware_update": "Ενημέρωση υλικολογισμικού",
   "valve_rain_delay": "Βαλβίδα {ch} Καθυστέρηση βροχής",
-  "valve_rain_delay_until": "Βαλβίδα {ch} Καθυστέρηση βροχής έως"
+  "valve_rain_delay_until": "Βαλβίδα {ch} Καθυστέρηση βροχής έως",
+  "valve_schedules": "Βαλβίδα {ch} Προγράμματα",
+  "valve_next_watering": "Βαλβίδα {ch} Επόμενο πότισμα"
 }

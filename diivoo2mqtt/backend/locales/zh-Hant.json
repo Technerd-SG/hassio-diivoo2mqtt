@@ -11,5 +11,7 @@
   "gateway_refresh_version": "閘道重新整理版本",
   "firmware_update": "韌體更新",
   "valve_rain_delay": "閥門 {ch} 雨天延遲",
-  "valve_rain_delay_until": "閥門 {ch} 雨天延遲至"
+  "valve_rain_delay_until": "閥門 {ch} 雨天延遲至",
+  "valve_schedules": "閥門 {ch} 排程",
+  "valve_next_watering": "閥門 {ch} 下次澆水"
 }

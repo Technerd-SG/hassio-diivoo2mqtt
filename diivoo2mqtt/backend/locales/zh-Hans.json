@@ -11,5 +11,7 @@
   "gateway_refresh_version": "网关刷新版本",
   "firmware_update": "固件更新",
   "valve_rain_delay": "阀门 {ch} 雨天延迟",
-  "valve_rain_delay_until": "阀门 {ch} 雨天延迟至"
+  "valve_rain_delay_until": "阀门 {ch} 雨天延迟至",
+  "valve_schedules": "阀门 {ch} 时间表",
+  "valve_next_watering": "阀门 {ch} 下次浇水"
 }

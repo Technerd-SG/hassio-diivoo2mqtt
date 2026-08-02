@@ -11,5 +11,7 @@
   "gateway_refresh_version": "Gateway รีเฟรชเวอร์ชัน",
   "firmware_update": "อัปเดตเฟิร์มแวร์",
   "valve_rain_delay": "วาล์ว {ch} หน่วงเวลาฝน",
-  "valve_rain_delay_until": "วาล์ว {ch} หน่วงเวลาฝนจนถึง"
+  "valve_rain_delay_until": "วาล์ว {ch} หน่วงเวลาฝนจนถึง",
+  "valve_schedules": "วาล์ว {ch} ตารางเวลา",
+  "valve_next_watering": "วาล์ว {ch} การรดน้ำครั้งถัดไป"
 }
