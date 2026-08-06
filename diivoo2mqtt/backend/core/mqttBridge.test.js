@@ -166,6 +166,48 @@ test('MQTT discovery uses a custom channel name without changing its identity', 
     assert.equal(config.command_topic, 'diivoo/123/valve/1/set');
 });
 
+test('a custom channel name renames every entity derived from that channel, not just the valve', () => {
+    const published = [];
+    const bridge = Object.create(MqttBridge.prototype);
+    Object.assign(bridge, {
+        discoveryPrefix: 'homeassistant',
+        strings: {
+            valve: 'Valve {ch}',
+            valve_remaining: 'Valve {ch} Remaining Time',
+            valve_source: 'Valve {ch} Source',
+            valve_rain_delay: 'Valve {ch} Rain Delay',
+            valve_rain_delay_until: 'Valve {ch} Rain Delay Until',
+        },
+        discoveredValves: new Set(),
+        _publish: (topic, payload, options) => published.push({ topic, payload, options }),
+    });
+
+    bridge.publishAutoDiscovery({
+        valveId: 123,
+        model: 'WT-13W',
+        alias: 'Garden',
+        channels: {
+            1: { displayName: 'Tomatoes' },
+        },
+    });
+
+    const expected = [
+        { topic: 'homeassistant/switch/123_ch1/config', name: 'Tomatoes', uniqueId: 'diivoo_123_valve_1' },
+        { topic: 'homeassistant/sensor/123_ch1_remaining/config', name: 'Tomatoes Remaining Time', uniqueId: 'diivoo_123_remaining_1' },
+        { topic: 'homeassistant/sensor/123_ch1_source/config', name: 'Tomatoes Source', uniqueId: 'diivoo_123_source_1' },
+        { topic: 'homeassistant/number/123_ch1_rain_delay/config', name: 'Tomatoes Rain Delay', uniqueId: 'diivoo_123_rain_delay_1' },
+        { topic: 'homeassistant/sensor/123_ch1_rain_delay_until/config', name: 'Tomatoes Rain Delay Until', uniqueId: 'diivoo_123_rain_delay_until_1' },
+    ];
+
+    for (const { topic, name, uniqueId } of expected) {
+        const entry = published.find((p) => p.topic === topic);
+        assert.ok(entry, `expected a discovery message on ${topic}`);
+        const config = JSON.parse(entry.payload);
+        assert.equal(config.name, name);
+        assert.equal(config.unique_id, uniqueId);
+    }
+});
+
 test('gateway alias updates the Home Assistant device name without changing identity', () => {
     const published = [];
     const gateway = {
@@ -270,4 +312,37 @@ test('MQTT discovery retains the translated fallback for unnamed channels', () =
         (entry) => entry.topic === 'homeassistant/switch/123_ch1/config'
     );
     assert.equal(JSON.parse(switchConfig.payload).name, 'Valve 1');
+});
+
+test('removing a device clears discovery topics for every entity of every channel', () => {
+    const published = [];
+    const bridge = Object.create(MqttBridge.prototype);
+    Object.assign(bridge, {
+        discoveryPrefix: 'homeassistant',
+        discoveredValves: new Set(['123']),
+        _publish: (topic, payload, options) => published.push({ topic, payload, options }),
+    });
+
+    bridge._clearValveDiscovery(123, 2);
+
+    const expectedTopics = [
+        'homeassistant/sensor/123_battery/config',
+        'homeassistant/binary_sensor/123_online/config',
+    ];
+    for (const ch of [1, 2]) {
+        expectedTopics.push(
+            `homeassistant/switch/123_ch${ch}/config`,
+            `homeassistant/sensor/123_ch${ch}_remaining/config`,
+            `homeassistant/sensor/123_ch${ch}_source/config`,
+            `homeassistant/number/123_ch${ch}_rain_delay/config`,
+            `homeassistant/sensor/123_ch${ch}_rain_delay_until/config`,
+        );
+    }
+
+    for (const topic of expectedTopics) {
+        const entry = published.find((p) => p.topic === topic);
+        assert.ok(entry, `expected a clearing publish on ${topic}`);
+        assert.equal(entry.payload, '');
+        assert.equal(entry.options?.retain, true);
+    }
 });
