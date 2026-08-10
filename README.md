@@ -82,6 +82,15 @@ The software handles variable channel counts across all supported models.
 
 ---
 
+## Contributing
+
+Pull requests, bug reports and protocol findings are all welcome. Please open
+pull requests against the `develop` branch — see [CONTRIBUTING.md](CONTRIBUTING.md)
+for the branch model, local setup, and the handful of project-specific rules
+that keep existing Home Assistant entities from breaking.
+
+---
+
 ## Support this project
 
 This project is free and open source. If it saves you from the cloud and you want to say thanks, a coffee goes a long way:
