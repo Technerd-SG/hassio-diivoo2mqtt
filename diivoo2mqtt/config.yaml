@@ -1,5 +1,5 @@
 name: "Diivoo2MQTT"
-version: "0.1.59"
+version: "0.1.60"
 slug: "diivoo2mqtt"
 description: "A Home Assistant add-on for running DIIVOO water timers locally over MQTT "
 url: "https://github.com/Technerd-SG/hassio-diivoo2mqtt"

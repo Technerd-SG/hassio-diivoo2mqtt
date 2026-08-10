@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 0.1.60 - 2026-08-10
 - Promoted ESP32 gateway firmware 0.1.11 to the stable channel. It reports the gateway MAC address in its `VERSION` response, which is required for the stable MAC-based gateway identity introduced in 0.1.59, and it adds Wi-Fi reconnect handling with a recovery portal that keeps trying to rejoin the stored network. Gateways still running 0.1.10 are offered the update through the existing Home Assistant firmware update entity; the web flasher now installs 0.1.11 for new setups.
 
 ## 0.1.59 - 2026-07-17
